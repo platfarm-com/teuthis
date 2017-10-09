@@ -1,0 +1,60 @@
+{
+  "name": "teuth",
+  "version": "0.0.1",
+  "description": "An XHR intercepting transparent proxy cache",
+  "keywords": [
+    "xhr",
+    "cache",
+    "proxy"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/pastcompute/teuthis.git"
+  },
+  "main": "lib/index.js",
+  "module": "teuthis.js",
+  "scripts": {
+    "bundle": "browserify --standalone teuthis -o teuthis.js lib/index.js",
+    "lint": "eslint .",
+    "prepublish": "npm run bundle",
+    "test": "mocha 'lib/**/*.test.js'",
+    "test:coverage": "nyc --reporter=lcov --reporter=text --all npm test -- --reporter dot",
+    "precommit": "npm run lint -- --fix && npm run test",
+    "prepush": "npm run lint && npm run test"
+  },
+  "author": "Andrew McDonnell",
+  "license": "BSD-3-Clause",
+  "nyc": {
+    "exclude": [
+      "teuthis.js",
+      "coverage/**",
+      "**/*.test.js"
+    ]
+  },
+  "eslintConfig": {
+    "env": {
+      "mocha": true
+    },
+    "plugins": [
+      "mocha"
+    ],
+    "rules": {
+      "mocha/no-exclusive-tests": "error",
+      "mocha/no-identical-title": "error",
+      "mocha/no-nested-tests": "error",
+      "mocha/no-sibling-hooks": "error",
+      "mocha/no-top-level-hooks": "error",
+      "max-nested-callbacks": "off"
+    }
+  },
+  "devDependencies": {
+    "browserify": "^14.4.0",
+    "eslint": "^4.5.0",
+    "eslint-plugin-mocha": "^4.9.0",
+    "mocha": "^3.4.2",
+    "nyc": "^11.0.2"
+  },
+  "dependencies": {
+    "localforage": "^1.5.0"
+  }
+}

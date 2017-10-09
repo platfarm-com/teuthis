@@ -1,0 +1,6 @@
+* text=auto
+*.js text
+*.json text
+*.xml text
+*.md text
+*.txt text
