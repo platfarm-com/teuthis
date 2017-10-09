@@ -14,6 +14,10 @@ Teuthis works by monkey-patching the native `XMLHttpRequest` class. As such it g
 * At present only tested to work with string and ArrayBuffer responses
 * Teuthis will probably break various test harnesses such as `sinon` which themselves mock an XHR server
 
+# Develop
+
+Run `npm run bundle` to create `teuthis.js`
+
 # Name
 
 Teuthis is ancient greek for squid and forms part of the scientific name of some species of squid. Squid is also the name of a famous open source web proxy cache.

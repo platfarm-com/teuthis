@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Teuthis example</title>
+  <script src="../teuthis.js"></script>
+  <script src="../node_modules/async/dist/async.min.js"></script>
+  <script>
+    // If we dont use instance name or a prefix we cant pre-populate
+    //teuthis.ProxyCache.forceClear(); // uncomment to force clear
+    var t = new teuthis.ProxyCache({instanceName: 'demo',
+      onStatus: function() { var s = t.getStats(); console.log(s.miss + ',' + s.hits + ',' + s.memory); },
+      onReady: function() {
+        console.log('Key form - method=A, url=B ==> ' + t.composeKey('A', 'B'));
+        console.log('weakLength ==> ' + t.weakLength());
+        t.each(function(k,v) { console.log('' + v + ' <== ' + k); }, function() {
+          t.flush(function() {
+            console.log('Flushed');
+            console.log('weakLength ==> ' + t.weakLength());
+            async.series([
+              function(cb) { t.put('GET', 'http://localhost/1', "data-1", function() { console.log('PUT-1'); cb(); })},
+              function(cb) { t.put('GET', 'http://localhost/2', "data-2", function() { console.log('PUT-2'); cb(); })},
+              function(cb) { t.put('GET', 'http://localhost/3', "data-3", function() { console.log('PUT-3'); cb(); })},
+            ], function(err) {
+              console.log('weakLength ==> ' + t.weakLength());
+              async.series([
+                function(cb) { t.each(function(k,v) { console.log('' + v + ' <== ' + k); }, cb); },
+                function(cb) { t.match('GET', 'http://localhost/1', function(key, value) { console.log('MATCH-1 ' + value); cb(); }, function(key) { cb('MISS! ' + key); } )},
+                function(cb) { t.match('GET', 'http://localhost/2', function(key, value) { console.log('MATCH-2 ' + value); cb(); }, function(key) { cb('MISS! ' + key); } )},
+                function(cb) { t.match('GET', 'http://localhost/3', function(key, value) { console.log('MATCH-3 ' + value); cb(); }, function(key) { cb('MISS! ' + key); } )},
+                function(cb) { t.match('GET', 'http://localhost/4', function(key, value) { cb('HIT!'); }, function(key) { console.log('MISS-4'); cb(); } )},
+              ], function(err) {
+                if (err) console.error(err);
+              });
+            });
+          });
+        });
+      }
+    });
+  </script>
+</html>
+<body>
+
+</body>
+</html>
