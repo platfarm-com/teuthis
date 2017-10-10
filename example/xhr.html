@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>Teuthis example</title>
+  <script src="../teuthis.js"></script>
+  <script src="../node_modules/async/dist/async.min.js"></script>
+  <script>
+    // If we dont use instance name or a prefix we cant pre-populate
+    //teuthis.ProxyCache.forceClear(); // uncomment to force clear
+    var XMLHttpRequestProxy = teuthis.Teuthis; // This replaces XMLHttpRequest
+
+    XMLHttpRequest = XMLHttpRequestProxy;
+
+    var xhr = new XMLHttpRequest();
+
+    XMLHttpRequest.setCacheSelector(function (method, url) {
+      console.log('setCacheSelector ' + url);
+      if (method === 'GET' && url.startsWith('http://') && (url.includes('bnb.data.bl.uk'))) {
+        return true;
+      }
+      return false;
+    });
+
+    xhr.open('GET', 'http://bnb.data.bl.uk/search?object=test', true);
+    xhr.onload = function() { console.log('GOT IT ' + xhr.response.slice(0, 32)); };
+    xhr.onerror = function(e) { console.error(e); };
+    xhr.send();
+
+    window.onload = function () {
+      console.log('onload...');
+      document.getElementById('btn-flush').onclick = function() {
+        xhr.getStore().forceClear();
+        console.log('cleared');
+      };
+    };
+  </script>
+</html>
+<body>
+  <button id="btn-flush">Flush cache</button>
+</body>
+</html>
