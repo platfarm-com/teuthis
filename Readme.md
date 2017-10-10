@@ -16,7 +16,7 @@ Data is saved using `localforage`, which defaults to IndexedDB and falls back to
 
 ```
   ...
-  <script src="../teuthis.js"></script>
+  <script src="path/to/teuthis.js"></script>
   ...
 ```
 
@@ -25,7 +25,26 @@ Data is saved using `localforage`, which defaults to IndexedDB and falls back to
 ```
   ...
   <script>
+    // Replace all future XHR with Teuthis
     XMLHttpRequest = teuthis.Teuthis;
+
+    // Set function used to decide what to cache or audit
+    XMLHttpRequest.setCacheSelector(function (method, url) {
+      // audit everything
+      console.log('XHR Audit -- ' + url);
+
+      // Only cache GET requests from specified URL
+      if (method === 'GET' && url.startsWith('https://') && (url.includes('bnb.data.bl.uk'))) {
+        return true;
+      }
+      return false;
+    });
+
+    // ...
+
+    // Clear the cache with prejudice as follows:
+    XMLHttpRequest.getStore().forceClear();
+
   </script>
   ...
 ```
