@@ -22,6 +22,7 @@
       return false;
     });
 
+    // Use a remote that doesnt fail on CORS
     xhr.open('GET', 'http://bnb.data.bl.uk/search?object=test', true);
     xhr.onload = function() { console.log('GOT IT ' + xhr.response.slice(0, 32)); };
     xhr.onerror = function(e) { console.error(e); };
