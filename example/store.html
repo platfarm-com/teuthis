@@ -37,9 +37,17 @@
         });
       }
     });
+
+    window.onload = function () {
+      console.log('onload...');
+      document.getElementById('btn-flush').onclick = function() {
+        t.forceClear();
+        console.log('cleared');
+      };
+    };
   </script>
 </html>
 <body>
-
+<button id="btn-flush">Flush cache</button>
 </body>
 </html>
