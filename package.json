@@ -33,12 +33,15 @@
   },
   "eslintConfig": {
     "env": {
-      "mocha": true
+      "mocha": true,
+      "browser": true,
+      "node": true
     },
     "plugins": [
       "mocha"
     ],
     "rules": {
+      "comma-dangle": ["error", "always-multiline"],
       "mocha/no-exclusive-tests": "error",
       "mocha/no-identical-title": "error",
       "mocha/no-nested-tests": "error",
