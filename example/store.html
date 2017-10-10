@@ -7,8 +7,8 @@
   <script src="../node_modules/async/dist/async.min.js"></script>
   <script>
     // If we dont use instance name or a prefix we cant pre-populate
-    //teuthis.ProxyCache.forceClear(); // uncomment to force clear
-    var t = new teuthis.ProxyCache({instanceName: 'demo',
+    //teuthis.RequestCache.forceClear(); // uncomment to force clear
+    var t = new teuthis.RequestCache({instanceName: 'demo',
       onStatus: function() { var s = t.getStats(); console.log(s.miss + ',' + s.hits + ',' + s.memory); },
       onReady: function() {
         console.log('Key form - method=A, url=B ==> ' + t.composeKey('A', 'B'));
