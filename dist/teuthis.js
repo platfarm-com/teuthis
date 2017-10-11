@@ -69,15 +69,15 @@ function RequestCache(options) {
 function handleCacheMiss(key, onMiss) {
   if (this.options.debugCacheMiss) console.log('[Teuthis] proxy-miss ' + key);
   this.stats.miss ++;
-  if (onMiss) onMiss(key);
-  if (this.options.onStatus) this.options.onStatus.call(this);
+  if (_.isFunction(onMiss)) onMiss(key);
+  if (_.isFunction(this.options.onStatus)) this.options.onStatus.call(this);
 }
 
 function handleCacheHit(key, cachedValue, onHit) {
   if (this.options.debugCacheHits) console.log('[Teuthis] proxy-hit ' + key);
   this.stats.hits ++;
-  if (onHit) onHit(key, cachedValue);
-  if (this.options.onStatus) this.options.onStatus.call(this);
+  if (_.isFunction(onHit)) onHit(key, cachedValue);
+  if (_.isFunction(this.options.onStatus)) this.options.onStatus.call(this);
 }
 
 // Returns estimated number of entries in the cache
