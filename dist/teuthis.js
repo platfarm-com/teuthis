@@ -173,7 +173,7 @@ RequestCache.prototype.put = function(method, url, value, done) {
   this.store.setItem(key, value).then(function() {
     self.cacheKeys[key] = true;
     if (typeof value === 'string') self.stats.memory += value.length;
-    if (typeof value === 'arraybuffer') self.stats.memory += value.length;
+    else if (_.isArrayBuffer(value)) self.stats.memory += value.byteLength;
     if (done) done();
   }).catch(function(err) {
     console.error('[Teuthis] proxy-cache-put error ' + err);
