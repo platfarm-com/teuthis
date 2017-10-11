@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -14,7 +14,7 @@
   "main": "lib/index.js",
   "module": "teuthis.js",
   "scripts": {
-    "bundle": "browserify --standalone teuthis -o teuthis.js lib/index.js",
+    "bundle": "browserify --standalone teuthis -o dist/teuthis.js lib/index.js",
     "lint": "eslint .",
     "prepublish": "npm run bundle",
     "test": "mocha 'lib/**/*.test.js'",
