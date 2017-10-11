@@ -1,6 +1,6 @@
 {
-  "name": "teuth",
-  "version": "0.0.1",
+  "name": "teuthis",
+  "version": "0.0.2",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -23,7 +23,7 @@
     "prepush": "npm run lint && npm run test"
   },
   "author": "Andrew McDonnell",
-  "license": "BSD-3-Clause",
+  "license": "LGPL-2.1",
   "nyc": {
     "exclude": [
       "teuthis.js",
