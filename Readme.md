@@ -67,6 +67,7 @@ Teuthis works by monkey-patching the native `XMLHttpRequest` class. As such it g
 * At present only tested to work with string and ArrayBuffer responses
 * Teuthis may break various test harnesses such as `sinon` which themselves mock an XHR server
 * There needs to be a proper test harness using mocha or similar
+* RequestCache.onready wont fire as it cant be set until after when default created by Teuthis
 
 # Developing
 

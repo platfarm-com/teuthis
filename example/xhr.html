@@ -30,7 +30,8 @@
     window.onload = function () {
       console.log('onload...');
       document.getElementById('btn-flush').onclick = function() {
-        xhr.getStore().forceClear();
+        XMLHttpRequestProxy.getStore().flush();
+        XMLHttpRequestProxy.getStore().forceClear();
         console.log('cleared');
       };
     };
