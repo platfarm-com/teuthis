@@ -53,9 +53,10 @@ function RequestCache(options) {
       self.cacheKeys[k] = true;
       var m = 0;
       if (typeof v === 'string') m = v.length;
-      if (typeof v === 'arraybuffer') m = v.length;
+      else if (_.isArrayBuffer(v)) m = v.byteLength;
+      // else console.log(v);
       self.stats.memory += m;
-      console.log('[Teuthis] found key: ' + k + ', memory: ' + m);
+      console.log('[Teuthis] found key: ' + k + ', memory: ' + m + '/' + self.stats.memory + ', ' + typeof v);
     }
   }, function() {
     console.log('[Teuthis] found keys: ' + Object.getOwnPropertyNames(self.cacheKeys).length);
