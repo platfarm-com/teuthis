@@ -203,11 +203,13 @@ var options = {
 // Global function to determine if a request should be cached or not
 var cacheSelector = function() { return false; }
 
+var requestCache = new RequestCache({instanceName: 'Teuthis'});
+
 function XMLHttpRequestProxy() {
   console.log('[Teuthis] XMLHttpRequestProxy constructor');
 
   var xhr = new nativeXMLHttpRequest();
-  var store = new RequestCache({instanceName: 'Teuthis'});
+  var store = requestCache;
 
   var method_ = null;
   var url_ = null;
@@ -315,8 +317,6 @@ function XMLHttpRequestProxy() {
       value: function() {return xhr[item].apply(xhr, arguments);},
     });
   });
-
-  this.getStore = function () { return store; }
 };
 
 // Set a function that returns true if method + url shold be cached
@@ -330,6 +330,8 @@ function XMLHttpRequestProxy() {
 XMLHttpRequestProxy.setCacheSelector = function (cacheSelector_) {
   cacheSelector = cacheSelector_;
 }
+
+XMLHttpRequestProxy.getStore = function () { return requestCache; }
 
 module.exports = XMLHttpRequestProxy;
 
