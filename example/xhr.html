@@ -26,19 +26,23 @@
 
       // Handle exceptions in underlying onsend so we can do things if the network is down
       // and there is a cache miss, like substitute an alternate result
-      XMLHttpRequestProxy.setErrorHook(function(e, isOnSend, xhr, realXhr) {
+      XMLHttpRequestProxy.setErrorHook(function(e, isOnSend, xhr, realXhr, alternativeResponse) {
         console.warn('Miss / Request Fail ' + (isOnSend ? 'MISS/request' : 'Other error'));
         //console.error(e);
         //console.log(e.target);  // e.target == xhr?
         console.log(realXhr.status + ',' + realXhr.statusText + ',' +  realXhr.response);
         // We cant tell one type of network error from another,
         // but we can examine the URL and use that to generate a fake response if needed
+
+        console.log('SUBSTITUTE DATA FOR ' + xhr.proxyurl);
+        alternativeResponse.response = "OOPS!";
+        return true;
       });
 
       var xhr = new XMLHttpRequest();
 
       // Use a remote that doesnt fail on CORS
-      xhr.open('GET', 'http://bnb.daXta.bl.uk/search?object=test', true);
+      xhr.open('GET', 'http://bnb.data.bl.uk/search?object=test', true);
 
       xhr.onload = function() { console.log('GOT IT ' + xhr.response.slice(0, 32)); };
       xhr.onerror = function(e) {
