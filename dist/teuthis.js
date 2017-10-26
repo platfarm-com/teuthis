@@ -20,9 +20,10 @@ var defaultOptions = {
   keyPrefix: '',
   onStatus: null,
   onReady: null,
-  debugCachePuts: true, // todo change to false in git
-  debugCacheHits: true, // todo change to false in git
-  debugCacheMiss: true, // todo change to false in git
+  debugCachePuts: true,
+  debugCacheHits: true,
+  debugCacheMiss: true,
+  debugCacheBoot: true,
 };
 
 // Create a new RequestCache
@@ -56,7 +57,7 @@ function RequestCache(options) {
       else if (_.isArrayBuffer(v)) m = v.byteLength;
       // else console.log(v);
       self.stats.memory += m;
-      console.log('[Teuthis] found key: ' + k + ', memory: ' + m + '/' + self.stats.memory + ', ' + typeof v);
+      if (self.options.debugCacheBoot) console.log('[Teuthis] found key: ' + k + ', memory: ' + m + '/' + self.stats.memory + ', ' + typeof v);
     }
   }, function() {
     console.log('[Teuthis] found keys: ' + Object.getOwnPropertyNames(self.cacheKeys).length);
@@ -196,9 +197,9 @@ var RequestCache = require('./request-cache');
 var nativeXMLHttpRequest = XMLHttpRequest;
 
 var options = {
-  debugMethods: true,   // todo change to false in git
-  debugCache: true,   // todo change to false in git
-  debugEvents: true,   // todo change to false in git
+  debugMethods: false,
+  debugCache: false,
+  debugEvents: false,
 };
 
 // Global function to determine if a request should be cached or not
@@ -209,7 +210,7 @@ var onerrorhook = function(e, xhr) { }
 var requestCache = null;
 
 function XMLHttpRequestProxy() {
-  console.log('[Teuthis] XMLHttpRequestProxy constructor');
+  // console.log('[Teuthis] XMLHttpRequestProxy constructor');
 
   var xhr = new nativeXMLHttpRequest();
 
@@ -282,6 +283,7 @@ function XMLHttpRequestProxy() {
       var alternativeResponse = {};
       if (onerrorhook(e, shouldAddToCache_, self, xhr, alternativeResponse)) {
         // If user returns true then dont call onerror, instead call onload with fake data, such as a crossed tile PNG
+        console.warn('INTERCEPT! ' + alternativeResponse.response.byteLength);
 
         self.status = +200;
         self.statusText = '200 OK';
@@ -380,8 +382,19 @@ XMLHttpRequestProxy.setStore = function (store) { requestCache = store; }
 
 // Create an instance of the request cache, shared among all XHR.
 // If not called, and setStore not called, then happens on first XHR
-XMLHttpRequestProxy.init = function() {
-  requestCache = new RequestCache({instanceName: 'Teuthis'});
+XMLHttpRequestProxy.init = function(options_) {
+  console.log('XMLHttpRequestProxy.init');
+  options = Object.assign({}, options_);
+  console.log('Teuthis: Options', options);
+
+  var cacheOptions = {instanceName: 'Teuthis'};
+  // FIXME: there must be a Object or _ method to do this mapping
+  if (_.has(options_, 'debugCachePuts')) { cacheOptions.debugCachePuts = options_.debugCachePuts; }
+  if (_.has(options_, 'debugCacheHits')) { cacheOptions.debugCacheHits = options_.debugCacheHits; }
+  if (_.has(options_, 'debugCacheMiss')) { cacheOptions.debugCacheMiss = options_.debugCacheMiss; }
+  if (_.has(options_, 'debugCacheBoot')) { cacheOptions.debugCacheBoot = options_.debugCacheBoot; }
+
+  requestCache = new RequestCache(cacheOptions);
   return requestCache;
 }
 
