@@ -205,7 +205,7 @@ var options = {
 // Global function to determine if a request should be cached or not
 var cacheSelector = function() { return false; }
 
-var onerrorhook = function(e, xhr) { }
+var onerrorhook = function(e, isOnSend, xhr, realXhr, alternativeResponse) { }
 
 var requestCache = null;
 
