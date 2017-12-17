@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -41,7 +41,10 @@
       "mocha"
     ],
     "rules": {
-      "comma-dangle": ["error", "always-multiline"],
+      "comma-dangle": [
+        "error",
+        "always-multiline"
+      ],
       "mocha/no-exclusive-tests": "error",
       "mocha/no-identical-title": "error",
       "mocha/no-nested-tests": "error",

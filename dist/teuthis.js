@@ -206,6 +206,7 @@ var options = {
 var cacheSelector = function() { return false; }
 
 var onerrorhook = function(e, isOnSend, xhr, realXhr, alternativeResponse) { }
+var onloadhook = function(isOnSend, xhr, realXhr) { }
 
 var requestCache = null;
 
@@ -255,35 +256,35 @@ function XMLHttpRequestProxy() {
   // monkey-patch onload to save the value into cache, if we had a miss in send()
   // Call the users on-load once the value is saved into the cache, or immediately if not caching
   xhr.onload = function onload () {
+    if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onload ' + xhr.status + ' ' + xhr.statusText);
     self.status = xhr.status;
     self.statusText = xhr.statusText;
     self.response = xhr.response;
     if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
       if (shouldAddToCache_ === true) {
-        if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onload ' + method_ + ' ' + url_);
+        if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onload do-put ' + method_ + ' ' + url_);
         // console.log('proxy-cache-type ' + xhr.responseType); // + ', ' + xhr.responseText.substring(0,64));
         // if (xhr.responseType === 'arraybuffer')
         // Assuming the response is string or arraybuffer then clone it first, otherwise things seem to not work properly
         var savedResponse = xhr.response.slice(0);
         store.put(method_, url_, savedResponse, function() {
+          if (_.isFunction(onloadhook)) { onloadhook(shouldAddToCache_, self, xhr); }
           if (_.isFunction(self.onload)) { self.onload(); }
         });
         shouldAddToCache_ = false;
         return;
       }
     }
-    if (_.isFunction(self.onload)) { self.onload(); }
+    if (_.isFunction(onloadhook)) { onloadhook(shouldAddToCache_, self, xhr); } // Allow proxy success to be hooked as well
+    if (_.isFunction(self.onload)) { self.onload(); } // Call original
   };
 
   xhr.onerror = function onerror (e) {
     if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onerror ' + method_ + ' ' + url_);
-    //if (options.debugEvents) console.error(e);
-    //if (options.debugEvents) console.error(e.target);
     if (_.isFunction(onerrorhook)) {
       var alternativeResponse = {};
       if (onerrorhook(e, shouldAddToCache_, self, xhr, alternativeResponse)) {
         // If user returns true then dont call onerror, instead call onload with fake data, such as a crossed tile PNG
-        console.warn('INTERCEPT! ' + alternativeResponse.response.byteLength);
 
         self.status = +200;
         self.statusText = '200 OK';
@@ -293,6 +294,7 @@ function XMLHttpRequestProxy() {
           self.response = alternativeResponse.response;
         }
         self.readyState = 4; // Done
+        if (_.isFunction(onloadhook)) { onloadhook('on-error', self, xhr); }
         if (_.isFunction(self.onload)) { self.onload(); }
 
         return;
@@ -324,9 +326,11 @@ function XMLHttpRequestProxy() {
         if (_.isFunction(self.onreadystatechange)) { self.onreadystatechange(); }
         self.response = cachedValue;
         self.readyState = 4; // Done
+        if (_.isFunction(onloadhook)) { onloadhook('on-match', self, xhr); }
         if (_.isFunction(self.onload)) { self.onload(); }
       }, function(key) {
-        // miss
+        // miss - not in our cache. So try and fetch from the real Internet
+        //console.log('onMiss called'); console.log(arguments);
         shouldAddToCache_ = true;
         xhr.send.apply(xhr, arguments);
       });
@@ -374,6 +378,10 @@ XMLHttpRequestProxy.setErrorHook = function (onerrorhook_) {
   onerrorhook = onerrorhook_;
 }
 
+XMLHttpRequestProxy.setLoadHook = function (onloadhook_) {
+  onloadhook = onloadhook_;
+}
+
 // Get the underlying RequestCache store so the user can monitor usage statistics, etc.
 XMLHttpRequestProxy.getStore = function () { return requestCache; }
 
@@ -383,9 +391,8 @@ XMLHttpRequestProxy.setStore = function (store) { requestCache = store; }
 // Create an instance of the request cache, shared among all XHR.
 // If not called, and setStore not called, then happens on first XHR
 XMLHttpRequestProxy.init = function(options_) {
-  console.log('XMLHttpRequestProxy.init');
   options = Object.assign({}, options_);
-  console.log('Teuthis: Options', options);
+  // console.log('Teuthis: Options', options);
 
   var cacheOptions = {instanceName: 'Teuthis'};
   // FIXME: there must be a Object or _ method to do this mapping
