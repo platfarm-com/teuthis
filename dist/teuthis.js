@@ -200,6 +200,7 @@ var options = {
   debugMethods: false,
   debugCache: false,
   debugEvents: false,
+  debugErrorEvents: true,
 };
 
 // Global function to determine if a request should be cached or not
@@ -280,7 +281,7 @@ function XMLHttpRequestProxy() {
   };
 
   xhr.onerror = function onerror (e) {
-    if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onerror ' + method_ + ' ' + url_);
+    if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror ' + method_ + ' ' + url_);
     if (_.isFunction(onerrorhook)) {
       var alternativeResponse = {};
       if (onerrorhook(e, shouldAddToCache_, self, xhr, alternativeResponse)) {
