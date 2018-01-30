@@ -68,11 +68,13 @@ Teuthis works by monkey-patching the native `XMLHttpRequest` class. As such it g
 * Teuthis may break various test harnesses such as `sinon` which themselves mock an XHR server
 * There needs to be a proper test harness using mocha or similar
 * RequestCache.onready wont fire as it cant be set until after when default created by Teuthis
+* There should be a `.min.js` build
+* Did I say it needed a unit test suite? Assistance gratefully received :-)
 
 # Developing
 
 Run `npm install` then `npm run bundle` to create `teuthis.js`
 
-# Name
+# Etymology
 
 Teuthis is ancient greek for squid and forms part of the scientific name of some species of squid. Squid is also the name of a famous open source web proxy cache.

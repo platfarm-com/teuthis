@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -22,7 +22,11 @@
     "precommit": "npm run lint -- --fix && npm run test",
     "prepush": "npm run lint && npm run test"
   },
-  "author": "Andrew McDonnell",
+  "homepage": "https://github.com/pastcompute/teuthis",
+  "author": {
+    "name": "Andrew McDonnell",
+    "email": "bugs@andrewmcdonnell.net"
+  },
   "license": "LGPL-2.1",
   "nyc": {
     "exclude": [
