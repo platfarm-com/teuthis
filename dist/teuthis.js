@@ -201,6 +201,10 @@ var options = {
   debugCache: false,
   debugEvents: false,
   debugErrorEvents: true,
+  debugCachePuts: false,
+  debugCacheHits: false,
+  debugCacheMiss: false,
+  debugCacheBoot: false,
 };
 
 // Global function to determine if a request should be cached or not
@@ -280,11 +284,14 @@ function XMLHttpRequestProxy() {
     if (_.isFunction(self.onload)) { self.onload(); } // Call original
   };
 
-  xhr.onerror = function onerror (e) {
-    if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror ' + method_ + ' ' + url_);
+  xhr.onerror = function onerror (event) {
+    // Note when using a file: URL in an Android webview, if the file is missing we get an error but status code is 0
+    // and event.error is not defined
+    if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror event=' + event.type + ' ' + method_ + ' ' + url_);
+    if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror error.name=' + (event.error && event.error.name) + ' error.message=' + (event.error && event.error.message));
     if (_.isFunction(onerrorhook)) {
       var alternativeResponse = {};
-      if (onerrorhook(e, shouldAddToCache_, self, xhr, alternativeResponse)) {
+      if (onerrorhook(event, shouldAddToCache_, self, xhr, alternativeResponse)) {
         // If user returns true then dont call onerror, instead call onload with fake data, such as a crossed tile PNG
 
         self.status = +200;
@@ -301,7 +308,7 @@ function XMLHttpRequestProxy() {
         return;
       }
     }
-    if (_.isFunction(self.onerror)) { self.onerror(e); }
+    if (_.isFunction(self.onerror)) { self.onerror(event); }
   }
 
   // Facade XMLHttpRequest.open() with a version that saves the arguments for later use, then calls the original
@@ -392,8 +399,8 @@ XMLHttpRequestProxy.setStore = function (store) { requestCache = store; }
 // Create an instance of the request cache, shared among all XHR.
 // If not called, and setStore not called, then happens on first XHR
 XMLHttpRequestProxy.init = function(options_) {
-  options = Object.assign({}, options_);
-  // console.log('Teuthis: Options', options);
+  options = Object.assign({}, options, options_);
+  console.log('Teuthis: Options=' + JSON.stringify(options));
 
   var cacheOptions = {instanceName: 'Teuthis'};
   // FIXME: there must be a Object or _ method to do this mapping
