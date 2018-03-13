@@ -2,12 +2,16 @@
 'use strict';
 
 module.exports = {
-  RequestCache: require('./request-cache'),  // exposed for testing
-  Teuthis: require('./xhr-proxy'),
+  RequestCache: require('./request-cache'), // exposed for testing
+  Teuthis: require('./xhr-proxy')
 };
 
 },{"./request-cache":2,"./xhr-proxy":3}],2:[function(require,module,exports){
 'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _ = require('lodash');
 var localforage = require('localforage');
@@ -23,7 +27,7 @@ var defaultOptions = {
   debugCachePuts: true,
   debugCacheHits: true,
   debugCacheMiss: true,
-  debugCacheBoot: true,
+  debugCacheBoot: true
 };
 
 // Create a new RequestCache
@@ -32,34 +36,33 @@ var defaultOptions = {
 function RequestCache(options) {
   console.log('[Teuthis] RequestCache constructor');
   var self = this;
-  this.stats = {miss: 0, hits: 0, memory: 0};
-  this.options = _.defaults({}, options);  _.defaults(this.options, defaultOptions);
+  this.stats = { miss: 0, hits: 0, memory: 0 };
+  this.options = _.defaults({}, options);_.defaults(this.options, defaultOptions);
   this.store = localforage;
   this.ownStore = false;
   if (this.options.instanceName !== null) {
     this.ownStore = true;
-    this.store = localforage.createInstance({name: this.options.instanceName, description: 'Teuthis XHR proxy cache'});
+    this.store = localforage.createInstance({ name: this.options.instanceName, description: 'Teuthis XHR proxy cache' });
   }
 
   // Keep our own list of keys, so we can flush them from localforage without
   // flushing other items that are not ours
-  this.keyPrefix = (typeof this.options.keyprefix === 'string') ? this.options.keyprefix : '';
+  this.keyPrefix = typeof this.options.keyprefix === 'string' ? this.options.keyprefix : '';
   this.cacheKeys = {};
 
   // If we have a key prefix or are using own store, then propulate cacheKeys
   // This is problematic, we cant guarantee that when the constructor returns, we are ready!
   this.ready = false;
-  this.store.iterate(function(v, k) {
+  this.store.iterate(function (v, k) {
     if (self.ownStore || self.keyIsPrefixed(k)) {
       self.cacheKeys[k] = true;
       var m = 0;
-      if (typeof v === 'string') m = v.length;
-      else if (_.isArrayBuffer(v)) m = v.byteLength;
+      if (typeof v === 'string') m = v.length;else if (_.isArrayBuffer(v)) m = v.byteLength;
       // else console.log(v);
       self.stats.memory += m;
-      if (self.options.debugCacheBoot) console.log('[Teuthis] found key: ' + k + ', memory: ' + m + '/' + self.stats.memory + ', ' + typeof v);
+      if (self.options.debugCacheBoot) console.log('[Teuthis] found key: ' + k + ', memory: ' + m + '/' + self.stats.memory + ', ' + (typeof v === 'undefined' ? 'undefined' : _typeof(v)));
     }
-  }, function() {
+  }, function () {
     console.log('[Teuthis] found keys: ' + Object.getOwnPropertyNames(self.cacheKeys).length);
     console.log('[Teuthis] found memory: ' + self.stats.memory);
     self.ready = true;
@@ -69,139 +72,148 @@ function RequestCache(options) {
 
 function handleCacheMiss(key, onMiss) {
   if (this.options.debugCacheMiss) console.log('[Teuthis] proxy-miss ' + key);
-  this.stats.miss ++;
+  this.stats.miss++;
   if (_.isFunction(onMiss)) onMiss(key);
   if (_.isFunction(this.options.onStatus)) this.options.onStatus.call(this);
 }
 
 function handleCacheHit(key, cachedValue, onHit) {
   if (this.options.debugCacheHits) console.log('[Teuthis] proxy-hit ' + key);
-  this.stats.hits ++;
+  this.stats.hits++;
   if (_.isFunction(onHit)) onHit(key, cachedValue);
   if (_.isFunction(this.options.onStatus)) this.options.onStatus.call(this);
 }
 
 // Returns estimated number of entries in the cache
 // If someone cleared the localforage instance in the meantime, number will be incorrect
-RequestCache.prototype.weakLength = function() {
+RequestCache.prototype.weakLength = function () {
   return Object.getOwnPropertyNames(this.cacheKeys).length;
-}
+};
 
-RequestCache.prototype.composeKey = function(method, url) {
+RequestCache.prototype.composeKey = function (method, url) {
   return this.keyPrefix + method + '__' + url;
-}
+};
 
-RequestCache.prototype.keyIsPrefixed = function(key) {
+RequestCache.prototype.keyIsPrefixed = function (key) {
   if (this.keyPrefix && this.keyPrefix.length > 0) {
     return key.startsWith(this.keyPrefix);
   } else {
     return false;
   }
-}
+};
 
 // Reset statistical information (other than memory usage)
-RequestCache.prototype.clearStats = function() {
+RequestCache.prototype.clearStats = function () {
   this.stats.miss = 0;
   this.stats.hits = 0;
-}
+};
 
-RequestCache.prototype.getStats = function() {
-  return Object.assign({}, this.stats);
-}
+RequestCache.prototype.getStats = function () {
+  return _extends({}, this.stats);
+};
 
 // Clear all our entries from the localforage instance
 // Probably slower than localforage.clear() but guarantee to remove only our entries
-RequestCache.prototype.flush = function(done) {
+RequestCache.prototype.flush = function (done) {
   var self = this;
   if (this.ownStore) {
-    self.store.clear(function() { self.cacheKeys = {}; self.stats.memory = 0; console.log('[Teuthis] proxy-flush'); if (done) done(); });
+    self.store.clear(function () {
+      self.cacheKeys = {};self.stats.memory = 0;console.log('[Teuthis] proxy-flush');if (done) done();
+    });
   } else {
     // Try and remove keys we know about, or with our prefix
-    self.store.iterate(function(v, k) {
+    self.store.iterate(function (v, k) {
       if (self.cacheKeys.hasOwnProperty(k) || self.keyIsPrefixed(k)) {
-        self.store.remove(k, function() { delete self.cacheKeys[k]; });
+        self.store.remove(k, function () {
+          delete self.cacheKeys[k];
+        });
       }
-    }, function() {
+    }, function () {
       self.cacheKeys = {};
       self.stats.memory = 0;
       console.log('[Teuthis] proxy-flush');
-      if (done) { done(); }
+      if (done) {
+        done();
+      }
     });
   }
-}
+};
 
-RequestCache.prototype.each = function(cb, done) {
+RequestCache.prototype.each = function (cb, done) {
   var self = this;
-  self.store.iterate(function(v, k) {
+  self.store.iterate(function (v, k) {
     if (self.cacheKeys.hasOwnProperty(k) || self.keyIsPrefixed(k)) {
       cb(k, v);
     }
   }, done);
-}
+};
 
 // Weakly check if object is cached. Only checks our key list, not localforage itself
 // So does not guarantee match(...) will have a HIT if, say, someone cleared localforage
-RequestCache.prototype.weakHas = function(method, url) {
+RequestCache.prototype.weakHas = function (method, url) {
   var key = this.composeKey(method, url);
   return this.cacheKeys.hasOwnProperty(key);
-}
+};
 
 // If method:url is in localforage then call onHit(composedKey, response) else call onMiss(composedKey)
-RequestCache.prototype.match = function(method, url, onHit, onMiss) {
+RequestCache.prototype.match = function (method, url, onHit, onMiss) {
   var key = this.composeKey(method, url);
   var self = this;
-  this.store.getItem(key)
-    .then(function(cachedValue) {
-      try {
-        if (cachedValue === null) {
-          delete self.cacheKeys[key]; // Handle the case where something else managed to delete an entry from localforage
-          handleCacheMiss.call(self, key, onMiss);
-        } else {
-          handleCacheHit.call(self, key, cachedValue, onHit);
-        }
-      } catch (err) {
-        // callback was source of the error, not this.store.getItem
-        console.error('[Teuthis] proxy-cache-match handler error ' + err);
-        console.error(err);
-        delete self.cacheKeys[key];
+  this.store.getItem(key).then(function (cachedValue) {
+    try {
+      if (cachedValue === null) {
+        delete self.cacheKeys[key]; // Handle the case where something else managed to delete an entry from localforage
+        handleCacheMiss.call(self, key, onMiss);
+      } else {
+        handleCacheHit.call(self, key, cachedValue, onHit);
       }
-    }).catch(function(err) {
-      // care - this will catch errors in the handler, not just errors in the cache itself
-      //      - if we are not careful by having try/catch above
-      //      - i.e. we need to avoid a double call to handleCacheMiss
-      // otherwise we see -
-      //    Error: Uncaught (in promise): InvalidStateError: XMLHttpRequest state must be OPENED.
-      //    Derived from xhr.send.apply(xhr, arguments); in send() inside the miss callback
-      console.error('[Teuthis] proxy-cache-match error ' + err);
+    } catch (err) {
+      // callback was source of the error, not this.store.getItem
+      console.error('[Teuthis] proxy-cache-match handler error ' + err);
       console.error(err);
       delete self.cacheKeys[key];
-      handleCacheMiss.call(self, key, onMiss);
-    });
-}
+    }
+  }).catch(function (err) {
+    // care - this will catch errors in the handler, not just errors in the cache itself
+    //      - if we are not careful by having try/catch above
+    //      - i.e. we need to avoid a double call to handleCacheMiss
+    // otherwise we see -
+    //    Error: Uncaught (in promise): InvalidStateError: XMLHttpRequest state must be OPENED.
+    //    Derived from xhr.send.apply(xhr, arguments); in send() inside the miss callback
+    console.error('[Teuthis] proxy-cache-match error ' + err);
+    console.error(err);
+    delete self.cacheKeys[key];
+    handleCacheMiss.call(self, key, onMiss);
+  });
+};
 
 // Put value of response for method:url into localforage, and call done(), or call done(err) if an error happens
-RequestCache.prototype.put = function(method, url, value, done) {
+RequestCache.prototype.put = function (method, url, value, done) {
   var key = this.composeKey(method, url);
   if (this.options.debugCachePuts) console.log('[Teuthis] proxy-cache-put ' + key);
   var self = this;
-  this.store.setItem(key, value).then(function() {
+  this.store.setItem(key, value).then(function () {
     self.cacheKeys[key] = true;
-    if (typeof value === 'string') self.stats.memory += value.length;
-    else if (_.isArrayBuffer(value)) self.stats.memory += value.byteLength;
+    if (typeof value === 'string') self.stats.memory += value.length;else if (_.isArrayBuffer(value)) self.stats.memory += value.byteLength;
     if (done) done();
-  }).catch(function(err) {
+  }).catch(function (err) {
     console.error('[Teuthis] proxy-cache-put error ' + err);
     if (done) done(err);
   });
-}
+};
 
-RequestCache.prototype.forceClear = function() { this.store.clear(); }
+RequestCache.prototype.forceClear = function () {
+  this.store.clear();
+};
 
 module.exports = RequestCache;
+
 },{"localforage":4,"lodash":5}],3:[function(require,module,exports){
 'use strict';
 
 // At the moment, responseText / responseXML facading are not supported
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _ = require('lodash');
 var RequestCache = require('./request-cache');
@@ -217,14 +229,16 @@ var options = {
   debugCachePuts: false,
   debugCacheHits: false,
   debugCacheMiss: false,
-  debugCacheBoot: false,
+  debugCacheBoot: false
 };
 
 // Global function to determine if a request should be cached or not
-var cacheSelector = function() { return false; }
+var cacheSelector = function cacheSelector() {
+  return false;
+};
 
-var onerrorhook = function(e, isOnSend, xhr, realXhr, alternativeResponse) { }
-var onloadhook = function(isOnSend, xhr, realXhr) { }
+var onerrorhook = function onerrorhook(e, isOnSend, xhr, realXhr, alternativeResponse) {};
+var onloadhook = function onloadhook(isOnSend, xhr, realXhr) {};
 
 var requestCache = null;
 
@@ -234,7 +248,7 @@ function XMLHttpRequestProxy() {
   var xhr = new nativeXMLHttpRequest();
 
   if (_.isNil(requestCache)) {
-    requestCache = new RequestCache({instanceName: 'Teuthis'});
+    requestCache = new RequestCache({ instanceName: 'Teuthis' });
   }
 
   var store = requestCache;
@@ -246,34 +260,42 @@ function XMLHttpRequestProxy() {
   var self = this;
 
   // Facade the status, statusText and response properties to spec XMLHttpRequest
-  this.status = 0;  // This is the status if error due to browser offline, etc.
+  this.status = 0; // This is the status if error due to browser offline, etc.
   this.statusText = "";
   this.response = "";
   // Facade the onload, onreadystatechange to spec XMLHttpRequest
   this.onreadystatechange = null;
   this.onload = null;
 
-  Object.defineProperty(self, 'proxymethod', { get: function() {return method_;} });
-  Object.defineProperty(self, 'proxyurl', { get: function() {return url_;} });
+  Object.defineProperty(self, 'proxymethod', { get: function get() {
+      return method_;
+    } });
+  Object.defineProperty(self, 'proxyurl', { get: function get() {
+      return url_;
+    } });
 
   function shouldCache(method, url) {
-    if (_.isFunction(cacheSelector)) { return cacheSelector.call(self, method, url); }
+    if (_.isFunction(cacheSelector)) {
+      return cacheSelector.call(self, method, url);
+    }
     return false;
   }
 
   // monkey-patch onreadystatechange to copy the status from the original.
   // then call the users onreadystatechange
   // This does happen each time an instance is constructed, perhaps this is redundant
-  xhr.onreadystatechange = function onreadystatechange () {
+  xhr.onreadystatechange = function onreadystatechange() {
     self.status = xhr.status;
-    self.statusText  = xhr.statusText;
-    self.readyState  = xhr.readyState;
-    if (_.isFunction(self.onreadystatechange)) { return self.onreadystatechange(); }
+    self.statusText = xhr.statusText;
+    self.readyState = xhr.readyState;
+    if (_.isFunction(self.onreadystatechange)) {
+      return self.onreadystatechange();
+    }
   };
 
   // monkey-patch onload to save the value into cache, if we had a miss in send()
   // Call the users on-load once the value is saved into the cache, or immediately if not caching
-  xhr.onload = function onload () {
+  xhr.onload = function onload() {
     if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onload ' + xhr.status + ' ' + xhr.statusText);
     self.status = xhr.status;
     self.statusText = xhr.statusText;
@@ -285,19 +307,27 @@ function XMLHttpRequestProxy() {
         // if (xhr.responseType === 'arraybuffer')
         // Assuming the response is string or arraybuffer then clone it first, otherwise things seem to not work properly
         var savedResponse = xhr.response.slice(0);
-        store.put(method_, url_, savedResponse, function() {
-          if (_.isFunction(onloadhook)) { onloadhook(shouldAddToCache_, self, xhr); }
-          if (_.isFunction(self.onload)) { self.onload(); }
+        store.put(method_, url_, savedResponse, function () {
+          if (_.isFunction(onloadhook)) {
+            onloadhook(shouldAddToCache_, self, xhr);
+          }
+          if (_.isFunction(self.onload)) {
+            self.onload();
+          }
         });
         shouldAddToCache_ = false;
         return;
       }
     }
-    if (_.isFunction(onloadhook)) { onloadhook(shouldAddToCache_, self, xhr); } // Allow proxy success to be hooked as well
-    if (_.isFunction(self.onload)) { self.onload(); } // Call original
+    if (_.isFunction(onloadhook)) {
+      onloadhook(shouldAddToCache_, self, xhr);
+    } // Allow proxy success to be hooked as well
+    if (_.isFunction(self.onload)) {
+      self.onload();
+    } // Call original
   };
 
-  xhr.onerror = function onerror (event) {
+  xhr.onerror = function onerror(event) {
     // Note when using a file: URL in an Android webview, if the file is missing we get an error but status code is 0
     // and event.error is not defined
     if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror event=' + event.type + ' ' + method_ + ' ' + url_);
@@ -309,23 +339,31 @@ function XMLHttpRequestProxy() {
 
         self.status = +200;
         self.statusText = '200 OK';
-        if (_.isFunction(self.onreadystatechange)) { self.onreadystatechange(); }
+        if (_.isFunction(self.onreadystatechange)) {
+          self.onreadystatechange();
+        }
 
         if (alternativeResponse.response) {
           self.response = alternativeResponse.response;
         }
         self.readyState = 4; // Done
-        if (_.isFunction(onloadhook)) { onloadhook('on-error', self, xhr); }
-        if (_.isFunction(self.onload)) { self.onload(); }
+        if (_.isFunction(onloadhook)) {
+          onloadhook('on-error', self, xhr);
+        }
+        if (_.isFunction(self.onload)) {
+          self.onload();
+        }
 
         return;
       }
     }
-    if (_.isFunction(self.onerror)) { self.onerror(event); }
-  }
+    if (_.isFunction(self.onerror)) {
+      self.onerror(event);
+    }
+  };
 
   // Facade XMLHttpRequest.open() with a version that saves the arguments for later use, then calls the original
-  this.open = function() {
+  this.open = function () {
     if (options.debugMethods) console.log('[Teuthis] proxy-xhr-open ' + arguments[0] + ' ' + arguments[1]);
     method_ = arguments[0];
     url_ = arguments[1];
@@ -336,20 +374,26 @@ function XMLHttpRequestProxy() {
   // Facade XMLHttpRequest.send() with a version that queries our offline cache,
   // calls the original if the response is not found in the cache, then adds the response to the cache,
   // or calls to onload() with the cached response if found
-  this.send = function() {
+  this.send = function () {
     if (options.debugMethods) console.log('[Teuthis] proxy-xhr-send ' + method_ + ' ' + url_);
     if (shouldCache(method_, url_)) {
       if (options.debugCache) console.log('[Teuthis] proxy-try-cache ' + method_ + ' ' + url_);
-      store.match(method_, url_, function(key, cachedValue) {
+      store.match(method_, url_, function (key, cachedValue) {
         // hit
         self.status = +200;
         self.statusText = '200 OK';
-        if (_.isFunction(self.onreadystatechange)) { self.onreadystatechange(); }
+        if (_.isFunction(self.onreadystatechange)) {
+          self.onreadystatechange();
+        }
         self.response = cachedValue;
         self.readyState = 4; // Done
-        if (_.isFunction(onloadhook)) { onloadhook('on-match', self, xhr); }
-        if (_.isFunction(self.onload)) { self.onload(); }
-      }, function(key) {
+        if (_.isFunction(onloadhook)) {
+          onloadhook('on-match', self, xhr);
+        }
+        if (_.isFunction(self.onload)) {
+          self.onload();
+        }
+      }, function (key) {
         // miss - not in our cache. So try and fetch from the real Internet
         //console.log('onMiss called'); console.log(arguments);
         shouldAddToCache_ = true;
@@ -361,24 +405,32 @@ function XMLHttpRequestProxy() {
   };
 
   // facade all other XMLHttpRequest getters, except 'status'
-  ["responseURL", "responseText", "responseXML", "upload"].forEach(function(item) {
+  ["responseURL", "responseText", "responseXML", "upload"].forEach(function (item) {
     Object.defineProperty(self, item, {
-      get: function() {return xhr[item];},
+      get: function get() {
+        return xhr[item];
+      }
     });
   });
 
   // facade all other XMLHttpRequest properties getters and setters'
-  ["ontimeout, timeout", "responseType", "withCredentials", "onprogress", "onloadstart", "onloadend", "onabort"].forEach(function(item) {
+  ["ontimeout, timeout", "responseType", "withCredentials", "onprogress", "onloadstart", "onloadend", "onabort"].forEach(function (item) {
     Object.defineProperty(self, item, {
-      get: function() {return xhr[item];},
-      set: function(val) {xhr[item] = val;},
+      get: function get() {
+        return xhr[item];
+      },
+      set: function set(val) {
+        xhr[item] = val;
+      }
     });
   });
 
   // facade all pure XMLHttpRequest methods
-  ["addEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function(item) {
+  ["addEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (item) {
     Object.defineProperty(self, item, {
-      value: function() {return xhr[item].apply(xhr, arguments);},
+      value: function value() {
+        return xhr[item].apply(xhr, arguments);
+      }
     });
   });
 };
@@ -393,38 +445,50 @@ function XMLHttpRequestProxy() {
 //    });
 XMLHttpRequestProxy.setCacheSelector = function (cacheSelector_) {
   cacheSelector = cacheSelector_;
-}
+};
 
 XMLHttpRequestProxy.setErrorHook = function (onerrorhook_) {
   onerrorhook = onerrorhook_;
-}
+};
 
 XMLHttpRequestProxy.setLoadHook = function (onloadhook_) {
   onloadhook = onloadhook_;
-}
+};
 
 // Get the underlying RequestCache store so the user can monitor usage statistics, etc.
-XMLHttpRequestProxy.getStore = function () { return requestCache; }
+XMLHttpRequestProxy.getStore = function () {
+  return requestCache;
+};
 
 // Set the underlying RequestCache store to a custom instance.
-XMLHttpRequestProxy.setStore = function (store) { requestCache = store; }
+XMLHttpRequestProxy.setStore = function (store) {
+  requestCache = store;
+};
 
 // Create an instance of the request cache, shared among all XHR.
 // If not called, and setStore not called, then happens on first XHR
-XMLHttpRequestProxy.init = function(options_) {
-  options = Object.assign({}, options, options_);
+XMLHttpRequestProxy.init = function (options_) {
+  options = _extends({}, options, options_);
   console.log('Teuthis: Options=' + JSON.stringify(options));
 
-  var cacheOptions = {instanceName: 'Teuthis'};
+  var cacheOptions = { instanceName: 'Teuthis' };
   // FIXME: there must be a Object or _ method to do this mapping
-  if (_.has(options_, 'debugCachePuts')) { cacheOptions.debugCachePuts = options_.debugCachePuts; }
-  if (_.has(options_, 'debugCacheHits')) { cacheOptions.debugCacheHits = options_.debugCacheHits; }
-  if (_.has(options_, 'debugCacheMiss')) { cacheOptions.debugCacheMiss = options_.debugCacheMiss; }
-  if (_.has(options_, 'debugCacheBoot')) { cacheOptions.debugCacheBoot = options_.debugCacheBoot; }
+  if (_.has(options_, 'debugCachePuts')) {
+    cacheOptions.debugCachePuts = options_.debugCachePuts;
+  }
+  if (_.has(options_, 'debugCacheHits')) {
+    cacheOptions.debugCacheHits = options_.debugCacheHits;
+  }
+  if (_.has(options_, 'debugCacheMiss')) {
+    cacheOptions.debugCacheMiss = options_.debugCacheMiss;
+  }
+  if (_.has(options_, 'debugCacheBoot')) {
+    cacheOptions.debugCacheBoot = options_.debugCacheBoot;
+  }
 
   requestCache = new RequestCache(cacheOptions);
   return requestCache;
-}
+};
 
 module.exports = XMLHttpRequestProxy;
 
