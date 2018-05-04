@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -16,13 +16,13 @@
   "scripts": {
     "bundle": "browserify --standalone teuthis -o dist/teuthis.js lib/index.js -t [ babelify --presets [ env ] --plugins [ transform-object-assign ] ]",
     "lint": "eslint .",
-    "prepublish": "npm run bundle",
+    "prepare": "npm run bundle",
     "test": "mocha 'lib/**/*.test.js'",
     "test:coverage": "nyc --reporter=lcov --reporter=text --all npm test -- --reporter dot",
     "precommit": "npm run lint -- --fix && npm run test",
     "prepush": "npm run lint && npm run test"
   },
-  "homepage": "https://github.com/pastcompute/teuthis",
+  "homepage": "https://github.com/platfarm-com/teuthis",
   "author": {
     "name": "Andrew McDonnell",
     "email": "bugs@andrewmcdonnell.net"
