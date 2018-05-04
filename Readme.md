@@ -18,18 +18,16 @@ Briefly paraphrased, you can use Teuthis in a commercial setting, and the MPL do
 
 The easiest way to make available is to submit a pull request :-)
 
-I'm also happy to dual-license, so contact me to negotiate a commercial license if required.
+Please contact Platfarm to negotiate a commercial license if compliance with the MPL 2.0 license is does not fit your use case.
 
 # Usage example
 
 1. Load teuthis:
-
 ```
   ...
   <script src="path/to/teuthis.js"></script>
   ...
 ```
-
 2. Shim XMLHttpRequest:
 
 ```
@@ -78,12 +76,13 @@ Teuthis works by monkey-patching the native `XMLHttpRequest` class. As such it g
 * Teuthis may break various test harnesses such as `sinon` which themselves mock an XHR server
 * There needs to be a proper test harness using mocha or similar
 * RequestCache.onready wont fire as it cant be set until after when default created by Teuthis
-* There should be a `.min.js` build
 * Did I say it needed a unit test suite? Assistance gratefully received :-)
+* Teuthis may need to be started between vendor and main in an Ionic application, to avoid some conflicts observed with other libraries such as Firebase.
+* Create a .min.js version - presently the dist/teuthis.js file has been processed with Babel for cross browser compatibility but has not been shrunk.
 
 # Developing
 
-Run `npm install` then `npm run bundle` to create `teuthis.js`
+Run `npm install` then `npm run bundle` to create `dist/teuthis.js`
 
 # Etymology
 

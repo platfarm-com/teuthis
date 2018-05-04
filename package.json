@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -9,7 +9,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/pastcompute/teuthis.git"
+    "url": "https://github.com/platfarm-com/teuthis.git"
   },
   "main": "lib/index.js",
   "module": "teuthis.js",
