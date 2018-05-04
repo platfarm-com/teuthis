@@ -10,6 +10,16 @@ Uses:
 
 Data is saved using `localforage`, which defaults to IndexedDB and falls back to other methods
 
+## License
+
+Teuthis is licensed under the MPL (see https://www.mozilla.org/en-US/MPL/2.0/FAQ/ and for a good summary of reasons why see https://christoph-conrads.name/why-i-chose-the-mozilla-public-license-2-0/).
+
+Briefly paraphrased, you can use Teuthis in a commercial setting, and the MPL does not have the "viral" component of the GPL. However _modifications_ to files _that are part of Teuthis_ that you wish to _redistribute_ (by using in a web page or hybrid mobile app) must be made available, and also cannot be re-licensed.
+
+The easiest way to make available is to submit a pull request :-)
+
+I'm also happy to dual-license, so contact me to negotiate a commercial license if required.
+
 # Usage example
 
 1. Load teuthis:
