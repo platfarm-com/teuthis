@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
@@ -14,7 +14,7 @@
   "main": "lib/index.js",
   "module": "teuthis.js",
   "scripts": {
-    "bundle": "browserify --standalone teuthis -o dist/teuthis.js lib/index.js -t [ babelify --presets [ env ] --plugins [ transform-object-assign ] ]",
+    "bundle": "browserify --standalone teuthis -o dist/teuthis.js lib/index.js -t uglifyify -t [ babelify --presets [ env ] --plugins [ transform-object-assign ] ]",
     "lint": "eslint .",
     "prepare": "npm run bundle",
     "test": "mocha 'lib/**/*.test.js'",
@@ -61,16 +61,17 @@
     "async": "^2.5.0",
     "babel-core": "~6.26.0",
     "babel-plugin-transform-object-assign": "~6.22.0",
-    "babel-preset-env": "~1.6.1",
+    "babel-preset-env": "~1.7.0",
     "babelify": "~8.0.0",
-    "browserify": "^14.4.0",
+    "browserify": "~16.2.2",
     "eslint": "^4.5.0",
-    "eslint-plugin-mocha": "^4.9.0",
-    "mocha": "^3.4.2",
-    "nyc": "^11.0.2"
+    "eslint-plugin-mocha": "~4.12.1",
+    "mocha": "~5.1.1",
+    "nyc": "~11.7.3",
+    "uglifyify": "~5.0.0"
   },
   "dependencies": {
-    "localforage": "~1.5.0",
+    "localforage": "~1.7.1",
     "lodash": "~4.17.4"
   }
 }

@@ -1,520 +1,152 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.teuthis = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-/*! Teuthis XHR proxy/cache
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
-'use strict';
-
-module.exports = {
-  RequestCache: require('./request-cache'), // exposed for testing
-  Teuthis: require('./xhr-proxy')
-};
+"use strict";
+module.exports = { RequestCache: require("./request-cache"), Teuthis: require("./xhr-proxy") };
 
 },{"./request-cache":2,"./xhr-proxy":3}],2:[function(require,module,exports){
-/*! Teuthis XHR proxy/cache
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
-'use strict';
+"use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _ = require('lodash');
-var localforage = require('localforage');
-
-// Provides class RequestCache, a wrapper around the localforage local storage provider
-// that manages generating keys from XHR requests, and querying and saving data into the cache
-
-var defaultOptions = {
-  instanceName: null,
-  keyPrefix: '',
-  onStatus: null,
-  onReady: null,
-  debugCachePuts: true,
-  debugCacheHits: true,
-  debugCacheMiss: true,
-  debugCacheBoot: true
-};
-
-// Create a new RequestCache
-// If options.instanceName is set and not null then use a new private scope of localforage of that name, otherwise use global localforage
-// Using instanceName changes the behaviour of clear() to be less polite
-function RequestCache(options) {
-  console.log('[Teuthis] RequestCache constructor');
-  var self = this;
-  this.stats = { miss: 0, hits: 0, memory: 0 };
-  this.options = _.defaults({}, options);_.defaults(this.options, defaultOptions);
-  this.store = localforage;
-  this.ownStore = false;
-  if (this.options.instanceName !== null) {
-    this.ownStore = true;
-    this.store = localforage.createInstance({ name: this.options.instanceName, description: 'Teuthis XHR proxy cache' });
-  }
-
-  // Keep our own list of keys, so we can flush them from localforage without
-  // flushing other items that are not ours
-  this.keyPrefix = typeof this.options.keyprefix === 'string' ? this.options.keyprefix : '';
-  this.cacheKeys = {};
-
-  // If we have a key prefix or are using own store, then propulate cacheKeys
-  // This is problematic, we cant guarantee that when the constructor returns, we are ready!
-  this.ready = false;
-  this.store.iterate(function (v, k) {
-    if (self.ownStore || self.keyIsPrefixed(k)) {
-      self.cacheKeys[k] = true;
-      var m = 0;
-      if (typeof v === 'string') m = v.length;else if (_.isArrayBuffer(v)) m = v.byteLength;
-      // else console.log(v);
-      self.stats.memory += m;
-      if (self.options.debugCacheBoot) console.log('[Teuthis] found key: ' + k + ', memory: ' + m + '/' + self.stats.memory + ', ' + (typeof v === 'undefined' ? 'undefined' : _typeof(v)));
+var _ = require("lodash"),
+    localforage = require("localforage"),
+    defaultOptions = { instanceName: null, keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !0, debugCacheHits: !0, debugCacheMiss: !0, debugCacheBoot: !0 };function RequestCache(e) {
+  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: "Teuthis XHR proxy cache" })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
+    if (t.ownStore || t.keyIsPrefixed(s)) {
+      t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) && (o = e.byteLength), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
     }
   }, function () {
-    console.log('[Teuthis] found keys: ' + Object.getOwnPropertyNames(self.cacheKeys).length);
-    console.log('[Teuthis] found memory: ' + self.stats.memory);
-    self.ready = true;
-    if (self.options.onReady) self.options.onReady();
+    console.log("[Teuthis] found keys: " + Object.getOwnPropertyNames(t.cacheKeys).length), console.log("[Teuthis] found memory: " + t.stats.memory), t.ready = !0, t.options.onReady && t.options.onReady();
   });
-}
-
-function handleCacheMiss(key, onMiss) {
-  if (this.options.debugCacheMiss) console.log('[Teuthis] proxy-miss ' + key);
-  this.stats.miss++;
-  if (_.isFunction(onMiss)) onMiss(key);
-  if (_.isFunction(this.options.onStatus)) this.options.onStatus.call(this);
-}
-
-function handleCacheHit(key, cachedValue, onHit) {
-  if (this.options.debugCacheHits) console.log('[Teuthis] proxy-hit ' + key);
-  this.stats.hits++;
-  if (_.isFunction(onHit)) onHit(key, cachedValue);
-  if (_.isFunction(this.options.onStatus)) this.options.onStatus.call(this);
-}
-
-// Returns estimated number of entries in the cache
-// If someone cleared the localforage instance in the meantime, number will be incorrect
-RequestCache.prototype.weakLength = function () {
+}function handleCacheMiss(e, t) {
+  this.options.debugCacheMiss && console.log("[Teuthis] proxy-miss " + e), this.stats.miss++, _.isFunction(t) && t(e), _.isFunction(this.options.onStatus) && this.options.onStatus.call(this);
+}function handleCacheHit(e, t, s) {
+  this.options.debugCacheHits && console.log("[Teuthis] proxy-hit " + e), this.stats.hits++, _.isFunction(s) && s(e, t), _.isFunction(this.options.onStatus) && this.options.onStatus.call(this);
+}RequestCache.prototype.weakLength = function () {
   return Object.getOwnPropertyNames(this.cacheKeys).length;
-};
-
-RequestCache.prototype.composeKey = function (method, url) {
-  return this.keyPrefix + method + '__' + url;
-};
-
-RequestCache.prototype.keyIsPrefixed = function (key) {
-  if (this.keyPrefix && this.keyPrefix.length > 0) {
-    return key.startsWith(this.keyPrefix);
-  } else {
-    return false;
-  }
-};
-
-// Reset statistical information (other than memory usage)
-RequestCache.prototype.clearStats = function () {
-  this.stats.miss = 0;
-  this.stats.hits = 0;
-};
-
-RequestCache.prototype.getStats = function () {
+}, RequestCache.prototype.composeKey = function (e, t) {
+  return this.keyPrefix + e + "__" + t;
+}, RequestCache.prototype.keyIsPrefixed = function (e) {
+  return !!(this.keyPrefix && this.keyPrefix.length > 0) && e.startsWith(this.keyPrefix);
+}, RequestCache.prototype.clearStats = function () {
+  this.stats.miss = 0, this.stats.hits = 0;
+}, RequestCache.prototype.getStats = function () {
   return _extends({}, this.stats);
-};
-
-// Clear all our entries from the localforage instance
-// Probably slower than localforage.clear() but guarantee to remove only our entries
-RequestCache.prototype.flush = function (done) {
-  var self = this;
-  if (this.ownStore) {
-    self.store.clear(function () {
-      self.cacheKeys = {};self.stats.memory = 0;console.log('[Teuthis] proxy-flush');if (done) done();
+}, RequestCache.prototype.flush = function (e) {
+  var t = this;this.ownStore ? t.store.clear(function () {
+    t.cacheKeys = {}, t.stats.memory = 0, console.log("[Teuthis] proxy-flush"), e && e();
+  }) : t.store.iterate(function (e, s) {
+    (t.cacheKeys.hasOwnProperty(s) || t.keyIsPrefixed(s)) && t.store.remove(s, function () {
+      delete t.cacheKeys[s];
     });
-  } else {
-    // Try and remove keys we know about, or with our prefix
-    self.store.iterate(function (v, k) {
-      if (self.cacheKeys.hasOwnProperty(k) || self.keyIsPrefixed(k)) {
-        self.store.remove(k, function () {
-          delete self.cacheKeys[k];
-        });
-      }
-    }, function () {
-      self.cacheKeys = {};
-      self.stats.memory = 0;
-      console.log('[Teuthis] proxy-flush');
-      if (done) {
-        done();
-      }
-    });
-  }
-};
-
-RequestCache.prototype.each = function (cb, done) {
-  var self = this;
-  self.store.iterate(function (v, k) {
-    if (self.cacheKeys.hasOwnProperty(k) || self.keyIsPrefixed(k)) {
-      cb(k, v);
-    }
-  }, done);
-};
-
-// Weakly check if object is cached. Only checks our key list, not localforage itself
-// So does not guarantee match(...) will have a HIT if, say, someone cleared localforage
-RequestCache.prototype.weakHas = function (method, url) {
-  var key = this.composeKey(method, url);
-  return this.cacheKeys.hasOwnProperty(key);
-};
-
-// If method:url is in localforage then call onHit(composedKey, response) else call onMiss(composedKey)
-RequestCache.prototype.match = function (method, url, onHit, onMiss) {
-  var key = this.composeKey(method, url);
-  var self = this;
-  this.store.getItem(key).then(function (cachedValue) {
+  }, function () {
+    t.cacheKeys = {}, t.stats.memory = 0, console.log("[Teuthis] proxy-flush"), e && e();
+  });
+}, RequestCache.prototype.each = function (e, t) {
+  var s = this;s.store.iterate(function (t, o) {
+    (s.cacheKeys.hasOwnProperty(o) || s.keyIsPrefixed(o)) && e(o, t);
+  }, t);
+}, RequestCache.prototype.weakHas = function (e, t) {
+  var s = this.composeKey(e, t);return this.cacheKeys.hasOwnProperty(s);
+}, RequestCache.prototype.match = function (e, t, s, o) {
+  var i = this.composeKey(e, t),
+      n = this;this.store.getItem(i).then(function (e) {
     try {
-      if (cachedValue === null) {
-        delete self.cacheKeys[key]; // Handle the case where something else managed to delete an entry from localforage
-        handleCacheMiss.call(self, key, onMiss);
-      } else {
-        handleCacheHit.call(self, key, cachedValue, onHit);
-      }
-    } catch (err) {
-      // callback was source of the error, not this.store.getItem
-      console.error('[Teuthis] proxy-cache-match handler error ' + err);
-      console.error(err);
-      delete self.cacheKeys[key];
+      null === e ? (delete n.cacheKeys[i], handleCacheMiss.call(n, i, o)) : handleCacheHit.call(n, i, e, s);
+    } catch (e) {
+      console.error("[Teuthis] proxy-cache-match handler error " + e), console.error(e), delete n.cacheKeys[i];
     }
-  }).catch(function (err) {
-    // care - this will catch errors in the handler, not just errors in the cache itself
-    //      - if we are not careful by having try/catch above
-    //      - i.e. we need to avoid a double call to handleCacheMiss
-    // otherwise we see -
-    //    Error: Uncaught (in promise): InvalidStateError: XMLHttpRequest state must be OPENED.
-    //    Derived from xhr.send.apply(xhr, arguments); in send() inside the miss callback
-    console.error('[Teuthis] proxy-cache-match error ' + err);
-    console.error(err);
-    delete self.cacheKeys[key];
-    handleCacheMiss.call(self, key, onMiss);
+  }).catch(function (e) {
+    console.error("[Teuthis] proxy-cache-match error " + e), console.error(e), delete n.cacheKeys[i], handleCacheMiss.call(n, i, o);
   });
-};
-
-// Put value of response for method:url into localforage, and call done(), or call done(err) if an error happens
-RequestCache.prototype.put = function (method, url, value, done) {
-  var key = this.composeKey(method, url);
-  if (this.options.debugCachePuts) console.log('[Teuthis] proxy-cache-put ' + key);
-  var self = this;
-  this.store.setItem(key, value).then(function () {
-    self.cacheKeys[key] = true;
-    if (typeof value === 'string') self.stats.memory += value.length;else if (_.isArrayBuffer(value)) self.stats.memory += value.byteLength;
-    if (done) done();
-  }).catch(function (err) {
-    console.error('[Teuthis] proxy-cache-put error ' + err);
-    if (done) done(err);
+}, RequestCache.prototype.put = function (e, t, s, o) {
+  var i = this.composeKey(e, t);this.options.debugCachePuts && console.log("[Teuthis] proxy-cache-put " + i);var n = this;this.store.setItem(i, s).then(function () {
+    n.cacheKeys[i] = !0, "string" == typeof s ? n.stats.memory += s.length : _.isArrayBuffer(s) && (n.stats.memory += s.byteLength), o && o();
+  }).catch(function (e) {
+    console.error("[Teuthis] proxy-cache-put error " + e), o && o(e);
   });
-};
-
-RequestCache.prototype.forceClear = function () {
+}, RequestCache.prototype.forceClear = function () {
   this.store.clear();
-};
-
-module.exports = RequestCache;
+}, module.exports = RequestCache;
 
 },{"localforage":4,"lodash":5}],3:[function(require,module,exports){
-/*! Teuthis XHR proxy/cache
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
-'use strict';
-
-// At the moment, responseText / responseXML facading are not supported
+"use strict";
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _ = require('lodash');
-var RequestCache = require('./request-cache');
-
-// Save a reference to the native XMLHttpRequest
-var nativeXMLHttpRequest = XMLHttpRequest;
-
-var options = {
-  debugMethods: false,
-  debugCache: false,
-  debugEvents: false,
-  debugErrorEvents: true,
-  debugCachePuts: false,
-  debugCacheHits: false,
-  debugCacheMiss: false,
-  debugCacheBoot: false
-};
-
-// Global function to determine if a request should be cached or not
-var cacheSelector = function cacheSelector() {
-  return false;
-};
-
-var onerrorhook = function onerrorhook(e, isOnSend, xhr, realXhr, alternativeResponse) {};
-var onloadhook = function onloadhook(isOnSend, xhr, realXhr) {};
-
-var requestCache = null;
-
-function XMLHttpRequestProxy() {
-  // console.log('[Teuthis] XMLHttpRequestProxy constructor');
-
-  var xhr = new nativeXMLHttpRequest();
-
-  if (_.isNil(requestCache)) {
-    requestCache = new RequestCache({ instanceName: 'Teuthis' });
-  }
-
-  var store = requestCache;
-
-  var method_ = null;
-  var url_ = null;
-  var shouldAddToCache_ = false;
-
-  var self = this;
-
-  // Facade the status, statusText and response properties to spec XMLHttpRequest
-  this.status = 0; // This is the status if error due to browser offline, etc.
-  this.statusText = "";
-  this.response = "";
-  // Facade the onload, onreadystatechange to spec XMLHttpRequest
-  this.onreadystatechange = null;
-  this.onload = null;
-
-  Object.defineProperty(self, 'proxymethod', { get: function get() {
-      return method_;
-    } });
-  Object.defineProperty(self, 'proxyurl', { get: function get() {
-      return url_;
-    } });
-
-  function shouldCache(method, url) {
-    if (_.isFunction(cacheSelector)) {
-      return cacheSelector.call(self, method, url);
-    }
-    return false;
-  }
-
-  // monkey-patch onreadystatechange to copy the status from the original.
-  // then call the users onreadystatechange
-  // This does happen each time an instance is constructed, perhaps this is redundant
-  xhr.onreadystatechange = function onreadystatechange() {
-    self.status = xhr.status;
-    self.statusText = xhr.statusText;
-    self.readyState = xhr.readyState;
-    if (_.isFunction(self.onreadystatechange)) {
-      return self.onreadystatechange();
-    }
-  };
-
-  // monkey-patch onload to save the value into cache, if we had a miss in send()
-  // Call the users on-load once the value is saved into the cache, or immediately if not caching
-  xhr.onload = function onload() {
-    if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onload ' + xhr.status + ' ' + xhr.statusText);
-    self.status = xhr.status;
-    self.statusText = xhr.statusText;
-    self.response = xhr.response;
-    if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
-      if (shouldAddToCache_ === true) {
-        if (options.debugEvents) console.log('[Teuthis] proxy-xhr-onload do-put ' + method_ + ' ' + url_);
-        // console.log('proxy-cache-type ' + xhr.responseType); // + ', ' + xhr.responseText.substring(0,64));
-        // if (xhr.responseType === 'arraybuffer')
-        // Assuming the response is string or arraybuffer then clone it first, otherwise things seem to not work properly
-        var savedResponse = xhr.response.slice(0);
-        store.put(method_, url_, savedResponse, function () {
-          if (_.isFunction(onloadhook)) {
-            onloadhook(shouldAddToCache_, self, xhr);
-          }
-          if (_.isFunction(self.onload)) {
-            self.onload();
-          }
-        });
-        shouldAddToCache_ = false;
-        return;
-      }
-    }
-    if (_.isFunction(onloadhook)) {
-      onloadhook(shouldAddToCache_, self, xhr);
-    } // Allow proxy success to be hooked as well
-    if (_.isFunction(self.onload)) {
-      self.onload();
-    } // Call original
-  };
-
-  xhr.onerror = function onerror(event) {
-    // Note when using a file: URL in an Android webview, if the file is missing we get an error but status code is 0
-    // and event.error is not defined
-    if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror event=' + event.type + ' ' + method_ + ' ' + url_);
-    if (options.debugErrorEvents) console.log('[Teuthis] proxy-xhr-onerror error.name=' + (event.error && event.error.name) + ' error.message=' + (event.error && event.error.message));
-    if (_.isFunction(onerrorhook)) {
-      var alternativeResponse = {};
-      if (onerrorhook(event, shouldAddToCache_, self, xhr, alternativeResponse)) {
-        // If user returns true then dont call onerror, instead call onload with fake data, such as a crossed tile PNG
-
-        self.status = +200;
-        self.statusText = '200 OK';
-        if (_.isFunction(self.onreadystatechange)) {
-          self.onreadystatechange();
-        }
-
-        if (alternativeResponse.response) {
-          self.response = alternativeResponse.response;
-        }
-        self.readyState = 4; // Done
-        if (_.isFunction(onloadhook)) {
-          onloadhook('on-error', self, xhr);
-        }
-        if (_.isFunction(self.onload)) {
-          self.onload();
-        }
-
-        return;
-      }
-    }
-    if (_.isFunction(self.onerror)) {
-      self.onerror(event);
-    }
-  };
-
-  // Facade XMLHttpRequest.open() with a version that saves the arguments for later use, then calls the original
-  this.open = function () {
-    if (options.debugMethods) console.log('[Teuthis] proxy-xhr-open ' + arguments[0] + ' ' + arguments[1]);
-    method_ = arguments[0];
-    url_ = arguments[1];
-    shouldAddToCache_ = false;
-    xhr.open.apply(xhr, arguments);
-  };
-
-  // Facade XMLHttpRequest.send() with a version that queries our offline cache,
-  // calls the original if the response is not found in the cache, then adds the response to the cache,
-  // or calls to onload() with the cached response if found
-  this.send = function () {
-    if (options.debugMethods) console.log('[Teuthis] proxy-xhr-send ' + method_ + ' ' + url_);
-    if (shouldCache(method_, url_)) {
-      if (options.debugCache) console.log('[Teuthis] proxy-try-cache ' + method_ + ' ' + url_);
-      store.match(method_, url_, function (key, cachedValue) {
-        // hit
-        self.status = +200;
-        self.statusText = '200 OK';
-        if (_.isFunction(self.onreadystatechange)) {
-          self.onreadystatechange();
-        }
-        self.response = cachedValue;
-        self.readyState = 4; // Done
-        if (_.isFunction(onloadhook)) {
-          onloadhook('on-match', self, xhr);
-        }
-        if (_.isFunction(self.onload)) {
-          self.onload();
-        }
-      }, function (key) {
-        // miss - not in our cache. So try and fetch from the real Internet
-        //console.log('onMiss called'); console.log(arguments);
-        shouldAddToCache_ = true;
-        xhr.send.apply(xhr, arguments);
-      });
-    } else {
-      xhr.send.apply(xhr, arguments);
-    }
-  };
-
-  // facade all other XMLHttpRequest getters, except 'status'
-  ["responseURL", "responseText", "responseXML", "upload"].forEach(function (item) {
-    Object.defineProperty(self, item, {
-      get: function get() {
-        return xhr[item];
-      }
-    });
+var _ = require("lodash"),
+    RequestCache = require("./request-cache"),
+    nativeXMLHttpRequest = XMLHttpRequest,
+    options = { debugMethods: !1, debugCache: !1, debugEvents: !1, debugErrorEvents: !0, debugCachePuts: !1, debugCacheHits: !1, debugCacheMiss: !1, debugCacheBoot: !1 },
+    cacheSelector = function cacheSelector() {
+  return !1;
+},
+    onerrorhook = function onerrorhook(e, o, t, n, s) {},
+    onloadhook = function onloadhook(e, o, t) {},
+    requestCache = null;function XMLHttpRequestProxy() {
+  var e = new nativeXMLHttpRequest();_.isNil(requestCache) && (requestCache = new RequestCache({ instanceName: "Teuthis" }));var o = requestCache,
+      t = null,
+      n = null,
+      s = !1,
+      r = this;this.status = 0, this.statusText = "", this.response = "", this.onreadystatechange = null, this.onload = null, Object.defineProperty(r, "proxymethod", { get: function get() {
+      return t;
+    } }), Object.defineProperty(r, "proxyurl", { get: function get() {
+      return n;
+    } }), e.onreadystatechange = function () {
+    if (r.status = e.status, r.statusText = e.statusText, r.readyState = e.readyState, _.isFunction(r.onreadystatechange)) return r.onreadystatechange();
+  }, e.onload = function () {
+    if (options.debugEvents && console.log("[Teuthis] proxy-xhr-onload " + e.status + " " + e.statusText), r.status = e.status, r.statusText = e.statusText, r.response = e.response, e.status >= 200 && e.status < 300 && e.response && !0 === s) {
+      options.debugEvents && console.log("[Teuthis] proxy-xhr-onload do-put " + t + " " + n);var a = e.response.slice(0);return o.put(t, n, a, function () {
+        _.isFunction(onloadhook) && onloadhook(s, r, e), _.isFunction(r.onload) && r.onload();
+      }), void (s = !1);
+    }_.isFunction(onloadhook) && onloadhook(s, r, e), _.isFunction(r.onload) && r.onload();
+  }, e.onerror = function (o) {
+    if (options.debugErrorEvents && console.log("[Teuthis] proxy-xhr-onerror event=" + o.type + " " + t + " " + n), options.debugErrorEvents && console.log("[Teuthis] proxy-xhr-onerror error.name=" + (o.error && o.error.name) + " error.message=" + (o.error && o.error.message)), _.isFunction(onerrorhook)) {
+      var a = {};if (onerrorhook(o, s, r, e, a)) return r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), a.response && (r.response = a.response), r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-error", r, e), void (_.isFunction(r.onload) && r.onload());
+    }_.isFunction(r.onerror) && r.onerror(o);
+  }, this.open = function () {
+    options.debugMethods && console.log("[Teuthis] proxy-xhr-open " + arguments[0] + " " + arguments[1]), t = arguments[0], n = arguments[1], s = !1, e.open.apply(e, arguments);
+  }, this.send = function () {
+    var a, u;options.debugMethods && console.log("[Teuthis] proxy-xhr-send " + t + " " + n), a = t, u = n, _.isFunction(cacheSelector) && cacheSelector.call(r, a, u) ? (options.debugCache && console.log("[Teuthis] proxy-try-cache " + t + " " + n), o.match(t, n, function (o, t) {
+      r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
+    }, function (o) {
+      s = !0, e.send.apply(e, arguments);
+    })) : e.send.apply(e, arguments);
+  }, ["responseURL", "responseText", "responseXML", "upload"].forEach(function (o) {
+    Object.defineProperty(r, o, { get: function get() {
+        return e[o];
+      } });
+  }), ["ontimeout, timeout", "responseType", "withCredentials", "onprogress", "onloadstart", "onloadend", "onabort"].forEach(function (o) {
+    Object.defineProperty(r, o, { get: function get() {
+        return e[o];
+      }, set: function set(t) {
+        e[o] = t;
+      } });
+  }), ["addEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (o) {
+    Object.defineProperty(r, o, { value: function value() {
+        return e[o].apply(e, arguments);
+      } });
   });
-
-  // facade all other XMLHttpRequest properties getters and setters'
-  ["ontimeout, timeout", "responseType", "withCredentials", "onprogress", "onloadstart", "onloadend", "onabort"].forEach(function (item) {
-    Object.defineProperty(self, item, {
-      get: function get() {
-        return xhr[item];
-      },
-      set: function set(val) {
-        xhr[item] = val;
-      }
-    });
-  });
-
-  // facade all pure XMLHttpRequest methods
-  ["addEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (item) {
-    Object.defineProperty(self, item, {
-      value: function value() {
-        return xhr[item].apply(xhr, arguments);
-      }
-    });
-  });
-};
-
-// Set a function that returns true if method + url shold be cached
-// Example:
-//    XMLHttpRequestProxy.setCacheSelector(function (method, url) {
-//      if (method === 'GET' && url.startsWith('https://') ) {
-//        return true;
-//      }
-//      return false;
-//    });
-XMLHttpRequestProxy.setCacheSelector = function (cacheSelector_) {
-  cacheSelector = cacheSelector_;
-};
-
-XMLHttpRequestProxy.setErrorHook = function (onerrorhook_) {
-  onerrorhook = onerrorhook_;
-};
-
-XMLHttpRequestProxy.setLoadHook = function (onloadhook_) {
-  onloadhook = onloadhook_;
-};
-
-// Get the underlying RequestCache store so the user can monitor usage statistics, etc.
-XMLHttpRequestProxy.getStore = function () {
+}XMLHttpRequestProxy.setCacheSelector = function (e) {
+  cacheSelector = e;
+}, XMLHttpRequestProxy.setErrorHook = function (e) {
+  onerrorhook = e;
+}, XMLHttpRequestProxy.setLoadHook = function (e) {
+  onloadhook = e;
+}, XMLHttpRequestProxy.getStore = function () {
   return requestCache;
-};
-
-// Set the underlying RequestCache store to a custom instance.
-XMLHttpRequestProxy.setStore = function (store) {
-  requestCache = store;
-};
-
-// Create an instance of the request cache, shared among all XHR.
-// If not called, and setStore not called, then happens on first XHR
-XMLHttpRequestProxy.init = function (options_) {
-  options = _extends({}, options, options_);
-  console.log('Teuthis: Options=' + JSON.stringify(options));
-
-  var cacheOptions = { instanceName: 'Teuthis' };
-  // FIXME: there must be a Object or _ method to do this mapping
-  if (_.has(options_, 'debugCachePuts')) {
-    cacheOptions.debugCachePuts = options_.debugCachePuts;
-  }
-  if (_.has(options_, 'debugCacheHits')) {
-    cacheOptions.debugCacheHits = options_.debugCacheHits;
-  }
-  if (_.has(options_, 'debugCacheMiss')) {
-    cacheOptions.debugCacheMiss = options_.debugCacheMiss;
-  }
-  if (_.has(options_, 'debugCacheBoot')) {
-    cacheOptions.debugCacheBoot = options_.debugCacheBoot;
-  }
-
-  requestCache = new RequestCache(cacheOptions);
-  return requestCache;
-};
-
-module.exports = XMLHttpRequestProxy;
+}, XMLHttpRequestProxy.setStore = function (e) {
+  requestCache = e;
+}, XMLHttpRequestProxy.init = function (e) {
+  options = _extends({}, options, e), console.log("Teuthis: Options=" + JSON.stringify(options));var o = { instanceName: "Teuthis" };return _.has(e, "debugCachePuts") && (o.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (o.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (o.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (o.debugCacheBoot = e.debugCacheBoot), requestCache = new RequestCache(o);
+}, module.exports = XMLHttpRequestProxy;
 
 },{"./request-cache":2,"lodash":5}],4:[function(require,module,exports){
 (function (global){
 /*!
     localForage -- Offline Storage, Improved
-    Version 1.5.7
+    Version 1.7.1
     https://localforage.github.io/localForage
     (c) 2013-2017 Mozilla, Apache License 2.0
 */
@@ -978,12 +610,18 @@ function normalizeKey(key) {
     return key;
 }
 
+function getCallback() {
+    if (arguments.length && typeof arguments[arguments.length - 1] === 'function') {
+        return arguments[arguments.length - 1];
+    }
+}
+
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 
 var DETECT_BLOB_SUPPORT_STORE = 'local-forage-detect-blob-support';
-var supportsBlobs;
-var dbContexts;
+var supportsBlobs = void 0;
+var dbContexts = {};
 var toString = Object.prototype.toString;
 
 // Transaction Modes
@@ -1062,8 +700,9 @@ function _deferReadiness(dbInfo) {
     // Create a deferred object representing the current database operation.
     var deferredOperation = {};
 
-    deferredOperation.promise = new Promise$1(function (resolve) {
+    deferredOperation.promise = new Promise$1(function (resolve, reject) {
         deferredOperation.resolve = resolve;
+        deferredOperation.reject = reject;
     });
 
     // Enqueue the deferred operation.
@@ -1089,6 +728,7 @@ function _advanceReadiness(dbInfo) {
     // chain of promises).
     if (deferredOperation) {
         deferredOperation.resolve();
+        return deferredOperation.promise;
     }
 }
 
@@ -1102,11 +742,13 @@ function _rejectReadiness(dbInfo, err) {
     // chain of promises).
     if (deferredOperation) {
         deferredOperation.reject(err);
+        return deferredOperation.promise;
     }
 }
 
 function _getConnection(dbInfo, upgradeNeeded) {
     return new Promise$1(function (resolve, reject) {
+        dbContexts[dbInfo.name] = dbContexts[dbInfo.name] || createDbContext();
 
         if (dbInfo.db) {
             if (upgradeNeeded) {
@@ -1177,7 +819,7 @@ function _isUpgradeNeeded(dbInfo, defaultVersion) {
         // If the version is not the default one
         // then warn for impossible downgrade.
         if (dbInfo.version !== defaultVersion) {
-            console.warn('The database "' + dbInfo.name + '"' + ' can\'t be downgraded from version ' + dbInfo.db.version + ' to version ' + dbInfo.version + '.');
+            console.warn('The database "' + dbInfo.name + '"' + " can't be downgraded from version " + dbInfo.db.version + ' to version ' + dbInfo.version + '.');
         }
         // Align the versions to prevent errors.
         dbInfo.version = dbInfo.db.version;
@@ -1257,15 +899,27 @@ function _tryReconnect(dbInfo) {
     var forages = dbContext.forages;
 
     for (var i = 0; i < forages.length; i++) {
-        if (forages[i]._dbInfo.db) {
-            forages[i]._dbInfo.db.close();
-            forages[i]._dbInfo.db = null;
+        var forage = forages[i];
+        if (forage._dbInfo.db) {
+            forage._dbInfo.db.close();
+            forage._dbInfo.db = null;
         }
     }
+    dbInfo.db = null;
 
-    return _getConnection(dbInfo, false).then(function (db) {
-        for (var j = 0; j < forages.length; j++) {
-            forages[j]._dbInfo.db = db;
+    return _getOriginalConnection(dbInfo).then(function (db) {
+        dbInfo.db = db;
+        if (_isUpgradeNeeded(dbInfo)) {
+            // Reopen the database for upgrading.
+            return _getUpgradedConnection(dbInfo);
+        }
+        return db;
+    }).then(function (db) {
+        // store the latest db reference
+        // in case the db was upgraded
+        dbInfo.db = dbContext.db = db;
+        for (var i = 0; i < forages.length; i++) {
+            forages[i]._dbInfo.db = db;
         }
     })["catch"](function (err) {
         _rejectReadiness(dbInfo, err);
@@ -1275,21 +929,47 @@ function _tryReconnect(dbInfo) {
 
 // FF doesn't like Promises (micro-tasks) and IDDB store operations,
 // so we have to do it with callbacks
-function createTransaction(dbInfo, mode, callback) {
+function createTransaction(dbInfo, mode, callback, retries) {
+    if (retries === undefined) {
+        retries = 1;
+    }
+
     try {
         var tx = dbInfo.db.transaction(dbInfo.storeName, mode);
         callback(null, tx);
     } catch (err) {
-        if (!dbInfo.db || err.name === 'InvalidStateError') {
-            return _tryReconnect(dbInfo).then(function () {
-
-                var tx = dbInfo.db.transaction(dbInfo.storeName, mode);
-                callback(null, tx);
-            });
+        if (retries > 0 && (!dbInfo.db || err.name === 'InvalidStateError' || err.name === 'NotFoundError')) {
+            return Promise$1.resolve().then(function () {
+                if (!dbInfo.db || err.name === 'NotFoundError' && !dbInfo.db.objectStoreNames.contains(dbInfo.storeName) && dbInfo.version <= dbInfo.db.version) {
+                    // increase the db version, to create the new ObjectStore
+                    if (dbInfo.db) {
+                        dbInfo.version = dbInfo.db.version + 1;
+                    }
+                    // Reopen the database for upgrading.
+                    return _getUpgradedConnection(dbInfo);
+                }
+            }).then(function () {
+                return _tryReconnect(dbInfo).then(function () {
+                    createTransaction(dbInfo, mode, callback, retries - 1);
+                });
+            })["catch"](callback);
         }
 
         callback(err);
     }
+}
+
+function createDbContext() {
+    return {
+        // Running localForages sharing a database.
+        forages: [],
+        // Shared database.
+        db: null,
+        // Database readiness (promise).
+        dbReady: null,
+        // Deferred operations on the database.
+        deferredOperations: []
+    };
 }
 
 // Open the IndexedDB database (automatically creates one if one didn't
@@ -1306,26 +986,12 @@ function _initStorage(options) {
         }
     }
 
-    // Initialize a singleton container for all running localForages.
-    if (!dbContexts) {
-        dbContexts = {};
-    }
-
     // Get the current context of the database;
     var dbContext = dbContexts[dbInfo.name];
 
     // ...or create a new context.
     if (!dbContext) {
-        dbContext = {
-            // Running localForages sharing a database.
-            forages: [],
-            // Shared database.
-            db: null,
-            // Database readiness (promise).
-            dbReady: null,
-            // Deferred operations on the database.
-            deferredOperations: []
-        };
+        dbContext = createDbContext();
         // Register the new context in the global container.
         dbContexts[dbInfo.name] = dbContext;
     }
@@ -1759,6 +1425,137 @@ function keys(callback) {
     return promise;
 }
 
+function dropInstance(options, callback) {
+    callback = getCallback.apply(this, arguments);
+
+    var currentConfig = this.config();
+    options = typeof options !== 'function' && options || {};
+    if (!options.name) {
+        options.name = options.name || currentConfig.name;
+        options.storeName = options.storeName || currentConfig.storeName;
+    }
+
+    var self = this;
+    var promise;
+    if (!options.name) {
+        promise = Promise$1.reject('Invalid arguments');
+    } else {
+        var isCurrentDb = options.name === currentConfig.name && self._dbInfo.db;
+
+        var dbPromise = isCurrentDb ? Promise$1.resolve(self._dbInfo.db) : _getOriginalConnection(options).then(function (db) {
+            var dbContext = dbContexts[options.name];
+            var forages = dbContext.forages;
+            dbContext.db = db;
+            for (var i = 0; i < forages.length; i++) {
+                forages[i]._dbInfo.db = db;
+            }
+            return db;
+        });
+
+        if (!options.storeName) {
+            promise = dbPromise.then(function (db) {
+                _deferReadiness(options);
+
+                var dbContext = dbContexts[options.name];
+                var forages = dbContext.forages;
+
+                db.close();
+                for (var i = 0; i < forages.length; i++) {
+                    var forage = forages[i];
+                    forage._dbInfo.db = null;
+                }
+
+                var dropDBPromise = new Promise$1(function (resolve, reject) {
+                    var req = idb.deleteDatabase(options.name);
+
+                    req.onerror = req.onblocked = function (err) {
+                        var db = req.result;
+                        if (db) {
+                            db.close();
+                        }
+                        reject(err);
+                    };
+
+                    req.onsuccess = function () {
+                        var db = req.result;
+                        if (db) {
+                            db.close();
+                        }
+                        resolve(db);
+                    };
+                });
+
+                return dropDBPromise.then(function (db) {
+                    dbContext.db = db;
+                    for (var i = 0; i < forages.length; i++) {
+                        var _forage = forages[i];
+                        _advanceReadiness(_forage._dbInfo);
+                    }
+                })["catch"](function (err) {
+                    (_rejectReadiness(options, err) || Promise$1.resolve())["catch"](function () {});
+                    throw err;
+                });
+            });
+        } else {
+            promise = dbPromise.then(function (db) {
+                if (!db.objectStoreNames.contains(options.storeName)) {
+                    return;
+                }
+
+                var newVersion = db.version + 1;
+
+                _deferReadiness(options);
+
+                var dbContext = dbContexts[options.name];
+                var forages = dbContext.forages;
+
+                db.close();
+                for (var i = 0; i < forages.length; i++) {
+                    var forage = forages[i];
+                    forage._dbInfo.db = null;
+                    forage._dbInfo.version = newVersion;
+                }
+
+                var dropObjectPromise = new Promise$1(function (resolve, reject) {
+                    var req = idb.open(options.name, newVersion);
+
+                    req.onerror = function (err) {
+                        var db = req.result;
+                        db.close();
+                        reject(err);
+                    };
+
+                    req.onupgradeneeded = function () {
+                        var db = req.result;
+                        db.deleteObjectStore(options.storeName);
+                    };
+
+                    req.onsuccess = function () {
+                        var db = req.result;
+                        db.close();
+                        resolve(db);
+                    };
+                });
+
+                return dropObjectPromise.then(function (db) {
+                    dbContext.db = db;
+                    for (var j = 0; j < forages.length; j++) {
+                        var _forage2 = forages[j];
+                        _forage2._dbInfo.db = db;
+                        _advanceReadiness(_forage2._dbInfo);
+                    }
+                })["catch"](function (err) {
+                    (_rejectReadiness(options, err) || Promise$1.resolve())["catch"](function () {});
+                    throw err;
+                });
+            });
+        }
+    }
+
+    executeCallback(promise, callback);
+    return promise;
+}
+
 var asyncStorage = {
     _driver: 'asyncStorage',
     _initStorage: _initStorage,
@@ -1770,7 +1567,8 @@ var asyncStorage = {
     clear: clear,
     length: length,
     key: key,
-    keys: keys
+    keys: keys,
+    dropInstance: dropInstance
 };
 
 function isWebSQLValid() {
@@ -2011,6 +1809,11 @@ var localforageSerializer = {
  * Copyright (c) 2012 Niklas von Hertzen
  * Licensed under the MIT license.
  */
+
+function createDbTable(t, dbInfo, callback, errorCallback) {
+    t.executeSql('CREATE TABLE IF NOT EXISTS ' + dbInfo.storeName + ' ' + '(id INTEGER PRIMARY KEY, key unique, value)', [], callback, errorCallback);
+}
+
 // Open the WebSQL database (automatically creates one if one didn't
 // previously exist), using any options set in the config.
 function _initStorage$1(options) {
@@ -2036,17 +1839,37 @@ function _initStorage$1(options) {
 
         // Create our key/value table if it doesn't exist.
         dbInfo.db.transaction(function (t) {
-            t.executeSql('CREATE TABLE IF NOT EXISTS ' + dbInfo.storeName + ' (id INTEGER PRIMARY KEY, key unique, value)', [], function () {
+            createDbTable(t, dbInfo, function () {
                 self._dbInfo = dbInfo;
                 resolve();
             }, function (t, error) {
                 reject(error);
             });
-        });
+        }, reject);
     });
 
     dbInfo.serializer = localforageSerializer;
     return dbInfoPromise;
+}
+
+function tryExecuteSql(t, dbInfo, sqlStatement, args, callback, errorCallback) {
+    t.executeSql(sqlStatement, args, callback, function (t, error) {
+        if (error.code === error.SYNTAX_ERR) {
+            t.executeSql('SELECT name FROM sqlite_master ' + "WHERE type='table' AND name = ?", [name], function (t, results) {
+                if (!results.rows.length) {
+                    // if the table is missing (was deleted)
+                    // re-create it table and retry
+                    createDbTable(t, dbInfo, function () {
+                        t.executeSql(sqlStatement, args, callback, errorCallback);
+                    }, errorCallback);
+                } else {
+                    errorCallback(t, error);
+                }
+            }, errorCallback);
+        } else {
+            errorCallback(t, error);
+        }
+    }, errorCallback);
 }
 
 function getItem$1(key, callback) {
@@ -2058,7 +1881,7 @@ function getItem$1(key, callback) {
         self.ready().then(function () {
             var dbInfo = self._dbInfo;
             dbInfo.db.transaction(function (t) {
-                t.executeSql('SELECT * FROM ' + dbInfo.storeName + ' WHERE key = ? LIMIT 1', [key], function (t, results) {
+                tryExecuteSql(t, dbInfo, 'SELECT * FROM ' + dbInfo.storeName + ' WHERE key = ? LIMIT 1', [key], function (t, results) {
                     var result = results.rows.length ? results.rows.item(0).value : null;
 
                     // Check to see if this is serialized content we need to
@@ -2069,7 +1892,6 @@ function getItem$1(key, callback) {
 
                     resolve(result);
                 }, function (t, error) {
-
                     reject(error);
                 });
             });
@@ -2088,7 +1910,7 @@ function iterate$1(iterator, callback) {
             var dbInfo = self._dbInfo;
 
             dbInfo.db.transaction(function (t) {
-                t.executeSql('SELECT * FROM ' + dbInfo.storeName, [], function (t, results) {
+                tryExecuteSql(t, dbInfo, 'SELECT * FROM ' + dbInfo.storeName, [], function (t, results) {
                     var rows = results.rows;
                     var length = rows.length;
 
@@ -2147,7 +1969,7 @@ function _setItem(key, value, callback, retriesLeft) {
                     reject(error);
                 } else {
                     dbInfo.db.transaction(function (t) {
-                        t.executeSql('INSERT OR REPLACE INTO ' + dbInfo.storeName + ' (key, value) VALUES (?, ?)', [key, value], function () {
+                        tryExecuteSql(t, dbInfo, 'INSERT OR REPLACE INTO ' + dbInfo.storeName + ' ' + '(key, value) VALUES (?, ?)', [key, value], function () {
                             resolve(originalValue);
                         }, function (t, error) {
                             reject(error);
@@ -2192,7 +2014,7 @@ function removeItem$1(key, callback) {
         self.ready().then(function () {
             var dbInfo = self._dbInfo;
             dbInfo.db.transaction(function (t) {
-                t.executeSql('DELETE FROM ' + dbInfo.storeName + ' WHERE key = ?', [key], function () {
+                tryExecuteSql(t, dbInfo, 'DELETE FROM ' + dbInfo.storeName + ' WHERE key = ?', [key], function () {
                     resolve();
                 }, function (t, error) {
                     reject(error);
@@ -2214,7 +2036,7 @@ function clear$1(callback) {
         self.ready().then(function () {
             var dbInfo = self._dbInfo;
             dbInfo.db.transaction(function (t) {
-                t.executeSql('DELETE FROM ' + dbInfo.storeName, [], function () {
+                tryExecuteSql(t, dbInfo, 'DELETE FROM ' + dbInfo.storeName, [], function () {
                     resolve();
                 }, function (t, error) {
                     reject(error);
@@ -2237,9 +2059,8 @@ function length$1(callback) {
             var dbInfo = self._dbInfo;
             dbInfo.db.transaction(function (t) {
                 // Ahhh, SQL makes this one soooooo easy.
-                t.executeSql('SELECT COUNT(key) as c FROM ' + dbInfo.storeName, [], function (t, results) {
+                tryExecuteSql(t, dbInfo, 'SELECT COUNT(key) as c FROM ' + dbInfo.storeName, [], function (t, results) {
                     var result = results.rows.item(0).c;
-
                     resolve(result);
                 }, function (t, error) {
                     reject(error);
@@ -2266,7 +2087,7 @@ function key$1(n, callback) {
         self.ready().then(function () {
             var dbInfo = self._dbInfo;
             dbInfo.db.transaction(function (t) {
-                t.executeSql('SELECT key FROM ' + dbInfo.storeName + ' WHERE id = ? LIMIT 1', [n + 1], function (t, results) {
+                tryExecuteSql(t, dbInfo, 'SELECT key FROM ' + dbInfo.storeName + ' WHERE id = ? LIMIT 1', [n + 1], function (t, results) {
                     var result = results.rows.length ? results.rows.item(0).key : null;
                     resolve(result);
                 }, function (t, error) {
@@ -2287,7 +2108,7 @@ function keys$1(callback) {
         self.ready().then(function () {
             var dbInfo = self._dbInfo;
             dbInfo.db.transaction(function (t) {
-                t.executeSql('SELECT key FROM ' + dbInfo.storeName, [], function (t, results) {
+                tryExecuteSql(t, dbInfo, 'SELECT key FROM ' + dbInfo.storeName, [], function (t, results) {
                     var keys = [];
 
                     for (var i = 0; i < results.rows.length; i++) {
@@ -2306,6 +2127,98 @@ function keys$1(callback) {
     return promise;
 }
 
+// https://www.w3.org/TR/webdatabase/#databases
+// > There is no way to enumerate or delete the databases available for an origin from this API.
+function getAllStoreNames(db) {
+    return new Promise$1(function (resolve, reject) {
+        db.transaction(function (t) {
+            t.executeSql('SELECT name FROM sqlite_master ' + "WHERE type='table' AND name <> '__WebKitDatabaseInfoTable__'", [], function (t, results) {
+                var storeNames = [];
+
+                for (var i = 0; i < results.rows.length; i++) {
+                    storeNames.push(results.rows.item(i).name);
+                }
+
+                resolve({
+                    db: db,
+                    storeNames: storeNames
+                });
+            }, function (t, error) {
+                reject(error);
+            });
+        }, function (sqlError) {
+            reject(sqlError);
+        });
+    });
+}
+
+function dropInstance$1(options, callback) {
+    callback = getCallback.apply(this, arguments);
+
+    var currentConfig = this.config();
+    options = typeof options !== 'function' && options || {};
+    if (!options.name) {
+        options.name = options.name || currentConfig.name;
+        options.storeName = options.storeName || currentConfig.storeName;
+    }
+
+    var self = this;
+    var promise;
+    if (!options.name) {
+        promise = Promise$1.reject('Invalid arguments');
+    } else {
+        promise = new Promise$1(function (resolve) {
+            var db;
+            if (options.name === currentConfig.name) {
+                // use the db reference of the current instance
+                db = self._dbInfo.db;
+            } else {
+                db = openDatabase(options.name, '', '', 0);
+            }
+
+            if (!options.storeName) {
+                // drop all database tables
+                resolve(getAllStoreNames(db));
+            } else {
+                resolve({
+                    db: db,
+                    storeNames: [options.storeName]
+                });
+            }
+        }).then(function (operationInfo) {
+            return new Promise$1(function (resolve, reject) {
+                operationInfo.db.transaction(function (t) {
+                    function dropTable(storeName) {
+                        return new Promise$1(function (resolve, reject) {
+                            t.executeSql('DROP TABLE IF EXISTS ' + storeName, [], function () {
+                                resolve();
+                            }, function (t, error) {
+                                reject(error);
+                            });
+                        });
+                    }
+
+                    var operations = [];
+                    for (var i = 0, len = operationInfo.storeNames.length; i < len; i++) {
+                        operations.push(dropTable(operationInfo.storeNames[i]));
+                    }
+
+                    Promise$1.all(operations).then(function () {
+                        resolve();
+                    })["catch"](function (e) {
+                        reject(e);
+                    });
+                }, function (sqlError) {
+                    reject(sqlError);
+                });
+            });
+        });
+    }
+
+    executeCallback(promise, callback);
+    return promise;
+}
+
 var webSQLStorage = {
     _driver: 'webSQLStorage',
     _initStorage: _initStorage$1,
@@ -2317,7 +2230,8 @@ var webSQLStorage = {
     clear: clear$1,
     length: length$1,
     key: key$1,
-    keys: keys$1
+    keys: keys$1,
+    dropInstance: dropInstance$1
 };
 
 function isLocalStorageValid() {
@@ -2328,6 +2242,15 @@ function isLocalStorageValid() {
     } catch (e) {
         return false;
     }
+}
+
+function _getKeyPrefix(options, defaultConfig) {
+    var keyPrefix = options.name + '/';
+
+    if (options.storeName !== defaultConfig.storeName) {
+        keyPrefix += options.storeName + '/';
+    }
+    return keyPrefix;
 }
 
 // Check if localStorage throws when saving an item
@@ -2362,11 +2285,7 @@ function _initStorage$2(options) {
         }
     }
 
-    dbInfo.keyPrefix = dbInfo.name + '/';
-
-    if (dbInfo.storeName !== self._defaultConfig.storeName) {
-        dbInfo.keyPrefix += dbInfo.storeName + '/';
-    }
+    dbInfo.keyPrefix = _getKeyPrefix(options, self._defaultConfig);
 
     if (!_isLocalStorageUsable()) {
         return Promise$1.reject();
@@ -2586,6 +2505,42 @@ function setItem$2(key, value, callback) {
     return promise;
 }
 
+function dropInstance$2(options, callback) {
+    callback = getCallback.apply(this, arguments);
+
+    options = typeof options !== 'function' && options || {};
+    if (!options.name) {
+        var currentConfig = this.config();
+        options.name = options.name || currentConfig.name;
+        options.storeName = options.storeName || currentConfig.storeName;
+    }
+
+    var self = this;
+    var promise;
+    if (!options.name) {
+        promise = Promise$1.reject('Invalid arguments');
+    } else {
+        promise = new Promise$1(function (resolve) {
+            if (!options.storeName) {
+                resolve(options.name + '/');
+            } else {
+                resolve(_getKeyPrefix(options, self._defaultConfig));
+            }
+        }).then(function (keyPrefix) {
+            for (var i = localStorage.length - 1; i >= 0; i--) {
+                var key = localStorage.key(i);
+
+                if (key.indexOf(keyPrefix) === 0) {
+                    localStorage.removeItem(key);
+                }
+            }
+        });
+    }
+
+    executeCallback(promise, callback);
+    return promise;
+}
+
 var localStorageWrapper = {
     _driver: 'localStorageWrapper',
     _initStorage: _initStorage$2,
@@ -2597,7 +2552,25 @@ var localStorageWrapper = {
     clear: clear$2,
     length: length$2,
     key: key$2,
-    keys: keys$2
+    keys: keys$2,
+    dropInstance: dropInstance$2
+};
+
+var sameValue = function sameValue(x, y) {
+    return x === y || typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y);
+};
+
+var includes = function includes(array, searchElement) {
+    var len = array.length;
+    var i = 0;
+    while (i < len) {
+        if (sameValue(array[i], searchElement)) {
+            return true;
+        }
+        i++;
+    }
+
+    return false;
 };
 
 var isArray = Array.isArray || function (arg) {
@@ -2618,7 +2591,9 @@ var DefaultDrivers = {
 
 var DefaultDriverOrder = [DefaultDrivers.INDEXEDDB._driver, DefaultDrivers.WEBSQL._driver, DefaultDrivers.LOCALSTORAGE._driver];
 
-var LibraryMethods = ['clear', 'getItem', 'iterate', 'key', 'keys', 'length', 'removeItem', 'setItem'];
+var OptionalDriverMethods = ['dropInstance'];
+
+var LibraryMethods = ['clear', 'getItem', 'iterate', 'key', 'keys', 'length', 'removeItem', 'setItem'].concat(OptionalDriverMethods);
 
 var DefaultConfig = {
     description: '',
@@ -2704,7 +2679,7 @@ var LocalForage = function () {
             // If localforage is ready and fully initialized, we can't set
             // any new configuration values. Instead, we return an error.
             if (this._ready) {
-                return new Error('Can\'t call config() after localforage ' + 'has been used.');
+                return new Error("Can't call config() after localforage " + 'has been used.');
             }
 
             for (var i in options) {
@@ -2752,12 +2727,36 @@ var LocalForage = function () {
 
                 var driverMethods = LibraryMethods.concat('_initStorage');
                 for (var i = 0, len = driverMethods.length; i < len; i++) {
-                    var customDriverMethod = driverMethods[i];
-                    if (!customDriverMethod || !driverObject[customDriverMethod] || typeof driverObject[customDriverMethod] !== 'function') {
+                    var driverMethodName = driverMethods[i];
+
+                    // when the property is there,
+                    // it should be a method even when optional
+                    var isRequired = !includes(OptionalDriverMethods, driverMethodName);
+                    if ((isRequired || driverObject[driverMethodName]) && typeof driverObject[driverMethodName] !== 'function') {
                         reject(complianceError);
                         return;
                     }
                 }
+
+                var configureMissingMethods = function configureMissingMethods() {
+                    var methodNotImplementedFactory = function methodNotImplementedFactory(methodName) {
+                        return function () {
+                            var error = new Error('Method ' + methodName + ' is not implemented by the current driver');
+                            var promise = Promise$1.reject(error);
+                            executeCallback(promise, arguments[arguments.length - 1]);
+                            return promise;
+                        };
+                    };
+
+                    for (var _i = 0, _len = OptionalDriverMethods.length; _i < _len; _i++) {
+                        var optionalDriverMethod = OptionalDriverMethods[_i];
+                        if (!driverObject[optionalDriverMethod]) {
+                            driverObject[optionalDriverMethod] = methodNotImplementedFactory(optionalDriverMethod);
+                        }
+                    }
+                };
+
+                configureMissingMethods();
 
                 var setDriverSupport = function setDriverSupport(support) {
                     if (DefinedDrivers[driverName]) {
@@ -2942,6 +2941,7 @@ module.exports = localforage_js;
 
 },{"3":3}]},{},[4])(4)
 });
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],5:[function(require,module,exports){
 (function (global){
