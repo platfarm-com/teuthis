@@ -74,8 +74,7 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _ = require("lodash/core"),
-    RequestCache = require("./request-cache"),
+var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCache = require("./request-cache"),
     nativeXMLHttpRequest = XMLHttpRequest,
     options = { debugMethods: !1, debugCache: !1, debugEvents: !1, debugErrorEvents: !0, debugCachePuts: !1, debugCacheHits: !1, debugCacheMiss: !1, debugCacheBoot: !1 },
     cacheSelector = function cacheSelector() {
@@ -141,7 +140,7 @@ var _ = require("lodash/core"),
   options = _extends({}, options, e), console.log("Teuthis: Options=" + JSON.stringify(options));var o = { instanceName: "Teuthis" };return _.has(e, "debugCachePuts") && (o.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (o.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (o.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (o.debugCacheBoot = e.debugCacheBoot), requestCache = new RequestCache(o);
 }, module.exports = XMLHttpRequestProxy;
 
-},{"./request-cache":2,"lodash/core":14}],4:[function(require,module,exports){
+},{"./request-cache":2,"lodash/core":14,"lodash/isNil":16}],4:[function(require,module,exports){
 (function (global){
 /*!
     localForage -- Offline Storage, Improved
@@ -2999,7 +2998,7 @@ function baseIsArrayBuffer(value) {
 
 module.exports = baseIsArrayBuffer;
 
-},{"./_baseGetTag":6,"./isObjectLike":16}],8:[function(require,module,exports){
+},{"./_baseGetTag":6,"./isObjectLike":17}],8:[function(require,module,exports){
 /**
  * The base implementation of `_.unary` without support for storing metadata.
  *
@@ -7026,6 +7025,33 @@ var isArrayBuffer = nodeIsArrayBuffer ? baseUnary(nodeIsArrayBuffer) : baseIsArr
 module.exports = isArrayBuffer;
 
 },{"./_baseIsArrayBuffer":7,"./_baseUnary":8,"./_nodeUtil":11}],16:[function(require,module,exports){
+/**
+ * Checks if `value` is `null` or `undefined`.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is nullish, else `false`.
+ * @example
+ *
+ * _.isNil(null);
+ * // => true
+ *
+ * _.isNil(void 0);
+ * // => true
+ *
+ * _.isNil(NaN);
+ * // => false
+ */
+function isNil(value) {
+  return value == null;
+}
+
+module.exports = isNil;
+
+},{}],17:[function(require,module,exports){
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
