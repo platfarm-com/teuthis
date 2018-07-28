@@ -121,7 +121,7 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
       }, set: function set(t) {
         e[o] = t;
       } });
-  }), ["addEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (o) {
+  }), ["addEventListener", "removeEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (o) {
     Object.defineProperty(r, o, { value: function value() {
         return e[o].apply(e, arguments);
       } });
