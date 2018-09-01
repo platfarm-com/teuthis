@@ -82,6 +82,9 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
 },
     onerrorhook = function onerrorhook(e, o, t, n, s) {},
     onloadhook = function onloadhook(e, o, t) {},
+    onmisshook = function onmisshook(e, o, t) {
+  return !1;
+},
     requestCache = null;function XMLHttpRequestProxy() {
   var e = new nativeXMLHttpRequest();_.isNil(requestCache) && (requestCache = new RequestCache({ instanceName: "Teuthis" }));var o = requestCache,
       t = null,
@@ -109,7 +112,9 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
     var a, u;options.debugMethods && console.log("[Teuthis] proxy-xhr-send " + t + " " + n), a = t, u = n, _.isFunction(cacheSelector) && cacheSelector.call(r, a, u) ? (options.debugCache && console.log("[Teuthis] proxy-try-cache " + t + " " + n), o.match(t, n, function (o, t) {
       r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
     }, function (o) {
-      s = !0, e.send.apply(e, arguments);
+      if (_.isFunction(onmisshook)) {
+        var t = { status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, t)) return r.status = t.status, r.statusText = t.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t.response, r.readyState = t.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
+      }s = !0, e.send.apply(e, arguments);
     })) : e.send.apply(e, arguments);
   }, ["responseURL", "responseText", "responseXML", "upload"].forEach(function (o) {
     Object.defineProperty(r, o, { get: function get() {
@@ -132,6 +137,8 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
   onerrorhook = e;
 }, XMLHttpRequestProxy.setLoadHook = function (e) {
   onloadhook = e;
+}, XMLHttpRequestProxy.setMissHook = function (e) {
+  onmisshook = e;
 }, XMLHttpRequestProxy.getStore = function () {
   return requestCache;
 }, XMLHttpRequestProxy.setStore = function (e) {
