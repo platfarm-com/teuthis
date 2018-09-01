@@ -113,7 +113,7 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
       r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
     }, function (o) {
       if (_.isFunction(onmisshook)) {
-        var t = { status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, t)) return r.status = t.status, r.statusText = t.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t.response, r.readyState = t.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
+        var t = { url: n, status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, t)) return r.status = t.status, r.statusText = t.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t.response, r.readyState = t.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
       }s = !0, e.send.apply(e, arguments);
     })) : e.send.apply(e, arguments);
   }, ["responseURL", "responseText", "responseXML", "upload"].forEach(function (o) {
