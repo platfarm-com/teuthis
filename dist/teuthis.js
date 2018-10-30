@@ -125,13 +125,13 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
     Object.defineProperty(r, o, { get: function get() {
         return e[o];
       } });
-  }), ["ontimeout, timeout", "responseType", "withCredentials", "onprogress", "onloadstart", "onloadend", "onabort"].forEach(function (o) {
+  }), ["ontimeout", "timeout", "responseType", "withCredentials", "onprogress", "onloadstart", "onloadend", "onabort"].forEach(function (o) {
     Object.defineProperty(r, o, { get: function get() {
         return e[o];
       }, set: function set(t) {
         e[o] = t;
       } });
-  }), ["addEventListener", "removeEventListener", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (o) {
+  }), ["addEventListener", "removeEventListener", "dispatchEvent", "abort", "getAllResponseHeaders", "getResponseHeader", "overrideMimeType", "setRequestHeader"].forEach(function (o) {
     Object.defineProperty(r, o, { value: function value() {
         return e[o].apply(e, arguments);
       } });
