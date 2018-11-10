@@ -32,6 +32,8 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
   this.stats.miss = 0, this.stats.hits = 0;
 }, RequestCache.prototype.getStats = function () {
   return _extends({}, this.stats);
+}, RequestCache.prototype.setDebugOptions = function (e) {
+  _.has(e, "debugCachePuts") && (this.options.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (this.options.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (this.options.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (this.options.debugCacheBoot = e.debugCacheBoot);
 }, RequestCache.prototype.flush = function (e) {
   var t = this;this.ownStore ? t.store.clear(function () {
     t.cacheKeys = {}, t.stats.memory = 0, console.log("[Teuthis] proxy-flush"), e && e();
@@ -50,18 +52,18 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
   var s = this.composeKey(e, t);return this.cacheKeys.hasOwnProperty(s);
 }, RequestCache.prototype.match = function (e, t, s, o) {
   var i = this.composeKey(e, t),
-      r = this;this.store.getItem(i).then(function (e) {
+      h = this;this.store.getItem(i).then(function (e) {
     try {
-      null === e ? (delete r.cacheKeys[i], handleCacheMiss.call(r, i, o)) : handleCacheHit.call(r, i, e, s);
+      null === e ? (delete h.cacheKeys[i], handleCacheMiss.call(h, i, o)) : handleCacheHit.call(h, i, e, s);
     } catch (e) {
-      console.error("[Teuthis] proxy-cache-match handler error " + e), console.error(e), delete r.cacheKeys[i];
+      console.error("[Teuthis] proxy-cache-match handler error " + e), console.error(e), delete h.cacheKeys[i];
     }
   }).catch(function (e) {
-    console.error("[Teuthis] proxy-cache-match error " + e), console.error(e), delete r.cacheKeys[i], handleCacheMiss.call(r, i, o);
+    console.error("[Teuthis] proxy-cache-match error " + e), console.error(e), delete h.cacheKeys[i], handleCacheMiss.call(h, i, o);
   });
 }, RequestCache.prototype.put = function (e, t, s, o) {
-  var i = this.composeKey(e, t);this.options.debugCachePuts && console.log("[Teuthis] proxy-cache-put " + i);var r = this;this.store.setItem(i, s).then(function () {
-    r.cacheKeys[i] = !0, "string" == typeof s ? r.stats.memory += s.length : _.isArrayBuffer(s) && (r.stats.memory += s.byteLength), o && o();
+  var i = this.composeKey(e, t);this.options.debugCachePuts && console.log("[Teuthis] proxy-cache-put " + i);var h = this;this.store.setItem(i, s).then(function () {
+    h.cacheKeys[i] = !0, "string" == typeof s ? h.stats.memory += s.length : _.isArrayBuffer(s) && (h.stats.memory += s.byteLength), o && o();
   }).catch(function (e) {
     console.error("[Teuthis] proxy-cache-put error " + e), o && o(e);
   });
@@ -152,6 +154,10 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
   requestCache = e;
 }, XMLHttpRequestProxy.init = function (e) {
   options = _extends({}, options, e), console.log("Teuthis: Options=" + JSON.stringify(options));var o = { instanceName: "Teuthis" };return _.has(e, "debugCachePuts") && (o.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (o.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (o.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (o.debugCacheBoot = e.debugCacheBoot), requestCache = new RequestCache(o);
+}, XMLHttpRequestProxy.setOptions = function (e) {
+  _.each(options, function (o, t) {
+    _.has(e, t) && (options[t] = e[t]);
+  }), requestCache.setDebugOptions(e);
 }, module.exports = XMLHttpRequestProxy;
 
 },{"./request-cache":2,"lodash/core":14,"lodash/isNil":16}],4:[function(require,module,exports){
