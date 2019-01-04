@@ -11,7 +11,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer");var localforage = require("localforage"),
     defaultOptions = { instanceName: null, keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !0, debugCacheHits: !0, debugCacheMiss: !0, debugCacheBoot: !0 };function RequestCache(e) {
-  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: "Teuthis XHR proxy cache" })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
+  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: "Teuthis XHR proxy cache" })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
     if (t.ownStore || t.keyIsPrefixed(s)) {
       t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) && (o = e.byteLength), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
     }
@@ -115,11 +115,11 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
     options.debugMethods && console.log("[Teuthis] proxy-xhr-open " + arguments[0] + " " + arguments[1]), t = arguments[0], n = arguments[1], s = !1, e.open.apply(e, arguments);
   }, this.send = function () {
     if (options.debugMethods && console.log("[Teuthis] proxy-xhr-send " + t + " " + n), u = t, i = n, _.isFunction(cacheSelector) && cacheSelector.call(r, u, i)) {
-      var a = cachekeymangler(n);options.debugCache && console.log("[Teuthis] proxy-try-cache " + t + " " + a), o.match(t, a, function (o, t) {
-        r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
+      var a = cachekeymangler(n);options.debugCache && console.log("[Teuthis] proxy-try-cache " + t + " " + a), o.match(t, a, function (o, n) {
+        options.debugCache && console.log("[Teuthis] proxy-try-cache hit " + t + " " + a), r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = n, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
       }, function (o) {
-        if (_.isFunction(onmisshook)) {
-          var t = { url: n, status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, t)) return r.status = t.status, r.statusText = t.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = t.response, r.readyState = t.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
+        if (options.debugCache && console.log("[Teuthis] proxy-try-cache miss " + t + " " + a), _.isFunction(onmisshook)) {
+          var u = { url: n, status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, u)) return r.status = u.status, r.statusText = u.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = u.response, r.readyState = u.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
         }s = !0, e.send.apply(e, arguments);
       });
     } else e.send.apply(e, arguments);var u, i;
@@ -164,7 +164,7 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
 (function (global){
 /*!
     localForage -- Offline Storage, Improved
-    Version 1.7.2
+    Version 1.7.3
     https://localforage.github.io/localForage
     (c) 2013-2017 Mozilla, Apache License 2.0
 */
@@ -3174,7 +3174,7 @@ module.exports = root;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.17.10';
+  var VERSION = '4.17.11';
 
   /** Error message constants. */
   var FUNC_ERROR_TEXT = 'Expected a function';
