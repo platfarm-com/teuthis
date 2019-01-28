@@ -10,7 +10,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer");var localforage = require("localforage"),
-    defaultOptions = { instanceName: null, instanceDescription: "Teuthis XHR proxy cache", keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !0, debugCacheHits: !0, debugCacheMiss: !0, debugCacheBoot: !0 };function RequestCache(e) {
+    defaultOptions = { instanceName: null, instanceDescription: "Teuthis XHR proxy cache", keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !1, debugCacheHits: !1, debugCacheMiss: !1, debugCacheBoot: !1 };function RequestCache(e) {
   console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: this.options.instanceDescription })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
     if (t.ownStore || t.keyIsPrefixed(s)) {
       t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) && (o = e.byteLength), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
@@ -91,7 +91,7 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
   return e;
 },
     requestCache = null;function XMLHttpRequestProxy() {
-  console.log("[Teuthis] XMLHttpRequestProxy constructor");var e = new nativeXMLHttpRequest();_.isNil(requestCache) && (requestCache = new RequestCache({ instanceName: "Teuthis" }));var o = requestCache,
+  var e = new nativeXMLHttpRequest();_.isNil(requestCache) && (requestCache = new RequestCache({ instanceName: "Teuthis" }));var o = requestCache,
       t = null,
       n = null,
       s = !1,
@@ -155,7 +155,7 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
 }, XMLHttpRequestProxy.init = function (e) {
   if (options = _extends({}, options, e), console.log("Teuthis: Options=" + JSON.stringify(options)), _.isNil(requestCache)) {
     var o = { instanceName: "Teuthis" };_.has(e, "debugCachePuts") && (o.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (o.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (o.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (o.debugCacheBoot = e.debugCacheBoot), requestCache = new RequestCache(o);
-  }return requestCache;
+  } else requestCache.setDebugOptions(e);return requestCache;
 }, XMLHttpRequestProxy.setOptions = function (e) {
   _.each(options, function (o, t) {
     _.has(e, t) && (options[t] = e[t]);
