@@ -11,7 +11,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer");var localforage = require("localforage"),
     defaultOptions = { instanceName: null, keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !0, debugCacheHits: !0, debugCacheMiss: !0, debugCacheBoot: !0 };function RequestCache(e) {
-  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: "Teuthis XHR proxy cache" })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
+  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: this.options.instanceDescription || "Teuthis XHR proxy cache" })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
     if (t.ownStore || t.keyIsPrefixed(s)) {
       t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) && (o = e.byteLength), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
     }
@@ -52,18 +52,18 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
   var s = this.composeKey(e, t);return this.cacheKeys.hasOwnProperty(s);
 }, RequestCache.prototype.match = function (e, t, s, o) {
   var i = this.composeKey(e, t),
-      h = this;this.store.getItem(i).then(function (e) {
+      c = this;this.store.getItem(i).then(function (e) {
     try {
-      null === e ? (delete h.cacheKeys[i], handleCacheMiss.call(h, i, o)) : handleCacheHit.call(h, i, e, s);
+      null === e ? (delete c.cacheKeys[i], handleCacheMiss.call(c, i, o)) : handleCacheHit.call(c, i, e, s);
     } catch (e) {
-      console.error("[Teuthis] proxy-cache-match handler error " + e), console.error(e), delete h.cacheKeys[i];
+      console.error("[Teuthis] proxy-cache-match handler error " + e), console.error(e), delete c.cacheKeys[i];
     }
   }).catch(function (e) {
-    console.error("[Teuthis] proxy-cache-match error " + e), console.error(e), delete h.cacheKeys[i], handleCacheMiss.call(h, i, o);
+    console.error("[Teuthis] proxy-cache-match error " + e), console.error(e), delete c.cacheKeys[i], handleCacheMiss.call(c, i, o);
   });
 }, RequestCache.prototype.put = function (e, t, s, o) {
-  var i = this.composeKey(e, t);this.options.debugCachePuts && console.log("[Teuthis] proxy-cache-put " + i);var h = this;this.store.setItem(i, s).then(function () {
-    h.cacheKeys[i] = !0, "string" == typeof s ? h.stats.memory += s.length : _.isArrayBuffer(s) && (h.stats.memory += s.byteLength), o && o();
+  var i = this.composeKey(e, t);this.options.debugCachePuts && console.log("[Teuthis] proxy-cache-put " + i);var c = this;this.store.setItem(i, s).then(function () {
+    c.cacheKeys[i] = !0, "string" == typeof s ? c.stats.memory += s.length : _.isArrayBuffer(s) && (c.stats.memory += s.byteLength), o && o();
   }).catch(function (e) {
     console.error("[Teuthis] proxy-cache-put error " + e), o && o(e);
   });
