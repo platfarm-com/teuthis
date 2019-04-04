@@ -82,7 +82,7 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
     cacheSelector = function cacheSelector() {
   return !1;
 },
-    onerrorhook = function onerrorhook(e, o, t, n, s) {},
+    onerrorhook = function onerrorhook(e, o, t, s, n) {},
     onloadhook = function onloadhook(e, o, t) {},
     onmisshook = function onmisshook(e, o, t) {
   return !1;
@@ -93,34 +93,38 @@ var _ = require("lodash/core");_.isNil = require("lodash/isNil");var RequestCach
     requestCache = null;function XMLHttpRequestProxy() {
   var e = new nativeXMLHttpRequest();_.isNil(requestCache) && (requestCache = new RequestCache({ instanceName: "Teuthis" }));var o = requestCache,
       t = null,
-      n = null,
-      s = !1,
+      s = null,
+      n = !1,
       r = this;this.status = 0, this.statusText = "", this.response = "", this.onreadystatechange = null, this.onload = null, Object.defineProperty(r, "proxymethod", { get: function get() {
       return t;
     } }), Object.defineProperty(r, "proxyurl", { get: function get() {
-      return n;
+      return s;
     } }), e.onreadystatechange = function () {
     if (r.status = e.status, r.statusText = e.statusText, r.readyState = e.readyState, _.isFunction(r.onreadystatechange)) return r.onreadystatechange();
   }, e.onload = function () {
-    if (options.debugEvents && console.log("[Teuthis] proxy-xhr-onload " + e.status + " " + e.statusText), r.status = e.status, r.statusText = e.statusText, r.response = e.response, e.status >= 200 && e.status < 300 && e.response && !0 === s) {
-      var a = cachekeymangler(n);options.debugEvents && console.log("[Teuthis] proxy-xhr-onload do-put " + t + " " + a);var u = e.response.slice(0);return o.put(t, a, u, function () {
-        _.isFunction(onloadhook) && onloadhook(s, r, e), _.isFunction(r.onload) && r.onload();
-      }), void (s = !1);
-    }_.isFunction(onloadhook) && onloadhook(s, r, e), _.isFunction(r.onload) && r.onload();
+    if (options.debugEvents && console.log("[Teuthis] proxy-xhr-onload " + e.status + " " + e.statusText), r.status = e.status, r.statusText = e.statusText, r.response = e.response, e.status >= 200 && e.status < 300 && e.response && !0 === n) {
+      var a = cachekeymangler(s);options.debugEvents && console.log("[Teuthis] proxy-xhr-onload do-put " + t + " " + a);var u = { v: e.response.slice(0), ts: Date.now() };return o.put(t, a, u, function () {
+        _.isFunction(onloadhook) && onloadhook(n, r, e), _.isFunction(r.onload) && r.onload();
+      }), void (n = !1);
+    }_.isFunction(onloadhook) && onloadhook(n, r, e), _.isFunction(r.onload) && r.onload();
   }, e.onerror = function (o) {
-    if (options.debugErrorEvents && console.log("[Teuthis] proxy-xhr-onerror event=" + o.type + " " + t + " " + n), options.debugErrorEvents && console.log("[Teuthis] proxy-xhr-onerror error.name=" + (o.error && o.error.name) + " error.message=" + (o.error && o.error.message)), _.isFunction(onerrorhook)) {
-      var a = {};if (onerrorhook(o, s, r, e, a)) return r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), a.response && (r.response = a.response), r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-error", r, e), void (_.isFunction(r.onload) && r.onload());
+    if (options.debugErrorEvents && console.log("[Teuthis] proxy-xhr-onerror event=" + o.type + " " + t + " " + s), options.debugErrorEvents && console.log("[Teuthis] proxy-xhr-onerror error.name=" + (o.error && o.error.name) + " error.message=" + (o.error && o.error.message)), _.isFunction(onerrorhook)) {
+      var a = {};if (onerrorhook(o, n, r, e, a)) return r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), a.response && (r.response = a.response), r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-error", r, e), void (_.isFunction(r.onload) && r.onload());
     }_.isFunction(r.onerror) && r.onerror(o);
   }, this.open = function () {
-    options.debugMethods && console.log("[Teuthis] proxy-xhr-open " + arguments[0] + " " + arguments[1]), t = arguments[0], n = arguments[1], s = !1, e.open.apply(e, arguments);
+    options.debugMethods && console.log("[Teuthis] proxy-xhr-open " + arguments[0] + " " + arguments[1]), t = arguments[0], s = arguments[1], n = !1, e.open.apply(e, arguments);
   }, this.send = function () {
-    if (options.debugMethods && console.log("[Teuthis] proxy-xhr-send " + t + " " + n), u = t, i = n, _.isFunction(cacheSelector) && cacheSelector.call(r, u, i)) {
-      var a = cachekeymangler(n);options.debugCache && console.log("[Teuthis] proxy-try-cache " + t + " " + a), o.match(t, a, function (o, n) {
-        options.debugCache && console.log("[Teuthis] proxy-try-cache hit " + t + " " + a), r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = n, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
+    if (options.debugMethods && console.log("[Teuthis] proxy-xhr-send " + t + " " + s), u = t, i = s, _.isFunction(cacheSelector) && cacheSelector.call(r, u, i)) {
+      var a = cachekeymangler(s);options.debugCache && console.log("[Teuthis] proxy-try-cache " + t + " " + a), o.match(t, a, function (o, u) {
+        if (!u.v || !u.ts) {
+          if (console.warn("invalid cache data"), options.debugCache && console.log("[Teuthis] proxy-try-cache miss " + t + " " + a), _.isFunction(onmisshook)) {
+            var i = { url: s, status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, i)) return r.status = i.status, r.statusText = i.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = i.response, r.readyState = i.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
+          }n = !0, e.send.apply(e, arguments);
+        }options.debugCache && console.log("[Teuthis] proxy-try-cache hit " + t + " " + a), r.status = 200, r.statusText = "200 OK", _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = u, r.readyState = 4, _.isFunction(onloadhook) && onloadhook("on-match", r, e), _.isFunction(r.onload) && r.onload();
       }, function (o) {
         if (options.debugCache && console.log("[Teuthis] proxy-try-cache miss " + t + " " + a), _.isFunction(onmisshook)) {
-          var u = { url: n, status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, u)) return r.status = u.status, r.statusText = u.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = u.response, r.readyState = u.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
-        }s = !0, e.send.apply(e, arguments);
+          var u = { url: s, status: 200, statusText: "200 OK", response: void 0, readyState: 4 };if (onmisshook(r, e, u)) return r.status = u.status, r.statusText = u.statusText, _.isFunction(r.onreadystatechange) && r.onreadystatechange(), r.response = u.response, r.readyState = u.readyState, _.isFunction(onloadhook) && onloadhook("on-match", r, e), void (_.isFunction(r.onload) && r.onload());
+        }n = !0, e.send.apply(e, arguments);
       });
     } else e.send.apply(e, arguments);var u, i;
   }, ["responseURL", "responseText", "responseXML", "upload"].forEach(function (o) {
