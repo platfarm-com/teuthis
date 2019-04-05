@@ -35,8 +35,8 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
 }, RequestCache.prototype.setDebugOptions = function (e) {
   _.has(e, "debugCachePuts") && (this.options.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (this.options.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (this.options.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (this.options.debugCacheBoot = e.debugCacheBoot);
 }, RequestCache.prototype.purgeItem = function (e, t) {
-  this.store.removeItem(k, function () {
-    delete self.cacheKeys[k], t && t();
+  var s = this;this.store.removeItem(k, function () {
+    s && s.cacheKeys && s.cacheKeys.hasOwnProperty(k) && delete s.cacheKeys[k], t && t();
   });
 }, RequestCache.prototype.flush = function (e) {
   var t = this;this.ownStore ? t.store.clear(function () {
