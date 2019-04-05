@@ -13,7 +13,7 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
     defaultOptions = { instanceName: null, instanceDescription: "Teuthis XHR proxy cache", keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !1, debugCacheHits: !1, debugCacheMiss: !1, debugCacheBoot: !1 };function RequestCache(e) {
   console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: this.options.instanceDescription })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
     if (t.ownStore || t.keyIsPrefixed(s)) {
-      t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) && (o = e.byteLength), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
+      t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) ? o = e.byteLength : _.has(e, "v") && (o = e.v.byteLength), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
     }
   }, function () {
     console.log("[Teuthis] found keys: " + Object.getOwnPropertyNames(t.cacheKeys).length), console.log("[Teuthis] found memory: " + t.stats.memory), t.ready = !0, t.options.onReady && t.options.onReady();
@@ -34,6 +34,10 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
   return _extends({}, this.stats);
 }, RequestCache.prototype.setDebugOptions = function (e) {
   _.has(e, "debugCachePuts") && (this.options.debugCachePuts = e.debugCachePuts), _.has(e, "debugCacheHits") && (this.options.debugCacheHits = e.debugCacheHits), _.has(e, "debugCacheMiss") && (this.options.debugCacheMiss = e.debugCacheMiss), _.has(e, "debugCacheBoot") && (this.options.debugCacheBoot = e.debugCacheBoot);
+}, RequestCache.prototype.purgeItem = function (e, t) {
+  this.store.remove(k, function () {
+    delete self.cacheKeys[k], t && t();
+  });
 }, RequestCache.prototype.flush = function (e) {
   var t = this;this.ownStore ? t.store.clear(function () {
     t.cacheKeys = {}, t.stats.memory = 0, console.log("[Teuthis] proxy-flush"), e && e();

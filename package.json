@@ -1,6 +1,6 @@
 {
   "name": "teuthis",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "An XHR intercepting transparent proxy cache",
   "keywords": [
     "xhr",
