@@ -11,9 +11,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer");var localforage = require("localforage"),
     defaultOptions = { instanceName: null, instanceDescription: "Teuthis XHR proxy cache", keyPrefix: "", onStatus: null, onReady: null, debugCachePuts: !1, debugCacheHits: !1, debugCacheMiss: !1, debugCacheBoot: !1 };function RequestCache(e) {
-  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: this.options.instanceDescription })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1, this.store.iterate(function (e, s) {
-    if (t.ownStore || t.keyIsPrefixed(s)) {
-      t.cacheKeys[s] = !0;var o = 0;"string" == typeof e ? o = e.length : _.isArrayBuffer(e) ? o = e.byteLength : _.has(e, "v") && (o = e.v.size), t.stats.memory += o, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + s + ", memory: " + o + "/" + t.stats.memory + ", " + (typeof e === "undefined" ? "undefined" : _typeof(e)));
+  console.log("[Teuthis] RequestCache constructor");var t = this;this.stats = { miss: 0, hits: 0, memory: 0 }, this.options = _.defaults({}, e), _.defaults(this.options, defaultOptions), console.log("RequestCache: Options=" + JSON.stringify(this.options)), this.store = localforage, this.ownStore = !1, null !== this.options.instanceName && (this.ownStore = !0, this.store = localforage.createInstance({ name: this.options.instanceName, description: this.options.instanceDescription })), this.keyPrefix = "string" == typeof this.options.keyprefix ? this.options.keyprefix : "", this.cacheKeys = {}, this.ready = !1;var s = Date.now();this.store.iterate(function (e, o) {
+    if (t.ownStore || t.keyIsPrefixed(o)) {
+      t.cacheKeys[o] = !0;var i = 0,
+          c = _.has(e, "v") ? e.v : e,
+          h = _.has(e, "ts") ? ((s - e.ts) / 60 / 60 / 24).toFixed(1) : 0;"string" == typeof c ? i = c.length : _.isArrayBuffer(c) && (i = c.byteLength), t.stats.memory += i, t.options.debugCacheBoot && console.log("[Teuthis] found key: " + o + ", memory: " + i + "/" + t.stats.memory + ", " + (typeof c === "undefined" ? "undefined" : _typeof(c)) + ", " + h + " days");
     }
   }, function () {
     console.log("[Teuthis] found keys: " + Object.getOwnPropertyNames(t.cacheKeys).length), console.log("[Teuthis] found memory: " + t.stats.memory), t.ready = !0, t.options.onReady && t.options.onReady();
@@ -3173,7 +3175,7 @@ module.exports = root;
  * @license
  * Lodash (Custom Build) <https://lodash.com/>
  * Build: `lodash core -o ./dist/lodash.core.js`
- * Copyright JS Foundation and other contributors <https://js.foundation/>
+ * Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
  * Released under MIT license <https://lodash.com/license>
  * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -3184,7 +3186,7 @@ module.exports = root;
   var undefined;
 
   /** Used as the semantic version number. */
-  var VERSION = '4.17.11';
+  var VERSION = '4.17.15';
 
   /** Error message constants. */
   var FUNC_ERROR_TEXT = 'Expected a function';
