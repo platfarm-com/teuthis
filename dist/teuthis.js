@@ -69,7 +69,7 @@ var _ = require("lodash/core");_.isArrayBuffer = require("lodash/isArrayBuffer")
   });
 }, RequestCache.prototype.put = function (e, t, s, o) {
   var i = this.composeKey(e, t);this.options.debugCachePuts && console.log("[Teuthis] proxy-cache-put " + i);var c = this;this.store.setItem(i, s).then(function () {
-    c.cacheKeys[i] = !0, "string" == typeof s ? c.stats.memory += s.length : _.isArrayBuffer(s) && (c.stats.memory += s.byteLength), o && o();
+    c.cacheKeys[i] = !0;var e = 0;var t = _.has(v, "v") ? v.v : v;"string" == typeof t ? e = t.length : _.isArrayBuffer(t) && (e = t.byteLength), c.stats.memory += e, o && o();
   }).catch(function (e) {
     console.error("[Teuthis] proxy-cache-put error " + e), o && o(e);
   });
